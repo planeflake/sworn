@@ -11,14 +11,11 @@ from app.db.models.character import CharacterTypeEnum, CharacterStatusEnum
 
 # --- Import OTHER DOMAIN ENTITIES ---
 # These should point to files within app/game_state/entities/
-from .equipment import EquipmentEntity as Equipment # Assuming EquipmentEntity in entities/equipment.py
+from .equipment import EquipmentEntity # Assuming EquipmentEntity in entities/equipment.py
 from .skill import SkillEntity as Skill           # Assuming SkillEntity in entities/skill.py
 from .stat import StatEntity as Stat               # Assuming StatEntity in entities/stat.py
-from .item import ItemEntity as Item               # Assuming ItemEntity in entities/item.py
-# --- Use aliases (like 'as Equipment') if the class names might collide or for clarity ---
+from .item import Item              # Assuming ItemEntity in entities/item.py
 
-
-# Apply the @dataclass decorator
 @dataclass
 class CharacterEntity: # Changed class name to CharacterEntity for clarity/convention
     """ Domain Entity representing a Character's state """
@@ -27,6 +24,8 @@ class CharacterEntity: # Changed class name to CharacterEntity for clarity/conve
     # These should come first unless using KW_ONLY tricks
     name: str
     character_type: CharacterTypeEnum
+    world_id: UUID
+    description: Optional[str] = None
 
     # --- Identifier (field with default factory) ---
     entity_id: UUID = field(default_factory=uuid4)
@@ -36,9 +35,10 @@ class CharacterEntity: # Changed class name to CharacterEntity for clarity/conve
     is_active: bool = True
     status: CharacterStatusEnum = CharacterStatusEnum.ALIVE
 
+
     # --- Complex fields: Lists of other Domain Entities ---
     stats: List[Stat] = field(default_factory=list)
-    equipment: List[Equipment] = field(default_factory=list)
+    equipment: List[EquipmentEntity] = field(default_factory=list)
     items: List[Item] = field(default_factory=list) # Inventory
     skills: List[Skill] = field(default_factory=list)
 

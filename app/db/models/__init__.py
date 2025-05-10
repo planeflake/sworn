@@ -16,3 +16,4 @@ from .profession_definition import ProfessionDefinition
 from .item import Item
 from .skill import Skill
 from .location import Location
+from .skill_definition import SkillDefinition

@@ -35,67 +35,41 @@ from .base import BaseEntity # Assuming entities/base.py exists
 # --- Entity Definition ---
 # Rename 'TemplateEntity' and adjust inheritance if needed
 @dataclass
-class SkillEntity(BaseEntity): # Inherit from your domain BaseEntity if applicable
+class SkillEntity(BaseEntity):  # Inherit from your domain BaseEntity if applicable
     """
     Skill TEMPLATE (@dataclass).
     Represents the internal state and data for core game logic.
     """
-    # --- Override/Use Base Fields ---
-    # entity_id and name might be inherited from BaseEntity.
-    # If BaseEntity doesn't have defaults, provide them or make them required here.
-    # Example overriding inherited defaults if needed (usually not necessary):
-    # entity_id: uuid.UUID = field(default_factory=uuid.uuid4)
-    # name: str = "Default Template Name"
-
     # --- Required Fields (Specific to this Entity) ---
-    # Fields without defaults MUST come before fields with defaults
-    # (unless using KW_ONLY)
-    level: str # Example: must be provided on creation
+    level: str  # Example: must be provided on creation
 
     # --- Optional Basic Types ---
-    # Use Optional[...] for fields that can be None
     description: Optional[str] = None
     count: Optional[int] = None
     value: Optional[float] = None
-    is_important: bool = False # Example with a simple default
+    is_important: bool = False  # Example with a simple default
 
     # --- Domain Enum ---
-    status: ExampleStatusEnum = ExampleStatusEnum.ACTIVE # Default value
+    status: ExampleStatusEnum = ExampleStatusEnum.ACTIVE  # Default value
 
     # --- Date/Time Fields ---
-    # Often optional, populated during logic or persistence
     event_timestamp: Optional[datetime] = None
     start_date: Optional[date] = None
 
     # --- Complex Types (Dictionaries, Lists of Primitives, Lists of Entities) ---
-    # Use default_factory for mutable types!
     metadata: Dict[str, Any] = field(default_factory=dict)
     tags: List[str] = field(default_factory=list)
-    related_entities: List[RelatedEntity] = field(default_factory=list) # List of other domain entities
+    related_entities: List[RelatedEntity] = field(default_factory=list)  # List of other domain entities
 
     # --- Links to other Entities (by ID) ---
-    # Store the UUID of the related entity
     related_entity_id: Optional[uuid.UUID] = None
 
     # --- Timestamps (Usually Optional in Domain, set by Repo/DB) ---
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-    # --- Dataclass Configuration ---
-    # @dataclass arguments (optional):
-    # init=True (default): generate __init__
-    # repr=True (default): generate __repr__
-    # eq=True (default): generate __eq__
-    # order=False (default): set True to generate comparison methods (__lt__, etc.)
-    # unsafe_hash=False (default): set True to generate __hash__ if __eq__ is True (or implement manually)
-    # frozen=False (default): set True to make instances immutable after creation
-
-    # --- Domain Logic Methods (Optional) ---
-    # Keep these focused on the entity's own state/rules.
-    # Complex orchestration belongs in Services/Managers.
-    # def update_status(self, new_status: ExampleStatusEnum):
-    #     # Example logic
-    #     if self.status != ExampleStatusEnum.DELETED:
-    #          self.status = new_status
+    # --- Override BaseEntity Fields ---
+    entity_id: uuid.UUID = field(default_factory=uuid.uuid4, init=False)
+    name: str = field(default="Unnamed Entity", init=False)
 
 # --- END OF FILE app/game_state/entities/_template_entity.py ---

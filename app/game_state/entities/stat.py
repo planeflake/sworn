@@ -61,7 +61,7 @@ class StatEntity(BaseEntity): # <<< Inherit from BaseEntity
 
     # --- Relationships (Represented by ID) ---
     # Remember: Use BaseEntity's 'entity_id' when referring to other entities.
-    parent_entity_id: uuid.UUID
+    #parent_entity_id: uuid.UUID
     owner_character_id: Optional[uuid.UUID] = None
 
     # --- Initialization Logic ---

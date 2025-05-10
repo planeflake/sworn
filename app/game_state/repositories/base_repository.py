@@ -98,9 +98,7 @@ class BaseRepository(Generic[EntityType, ModelType, PrimaryKeyType]):
 
         logging.debug(f"[_entity_to_model_dict] Final model dict keys for SQLAlchemy: {list(model_data.keys())}")
         return model_data
-
-    # _convert_to_entity remains largely the same as the previous version
-    # Make sure it correctly extracts data from db_obj and populates the entity_cls
+    
     async def _convert_to_entity(self, db_obj: ModelType) -> Optional[EntityType]:
         """Converts a DB model instance to a domain entity instance."""
         if db_obj is None:
@@ -178,11 +176,6 @@ class BaseRepository(Generic[EntityType, ModelType, PrimaryKeyType]):
         except Exception as e:
              logging.error(f"Unexpected error during entity instantiation for {self.entity_cls.__name__}", exc_info=True)
              raise
-
-
-# START OF FILE app/game_state/repositories/base_repository.py
-# (Keep imports, __init__, _entity_to_model_dict, _convert_to_entity, find_by_id, find_all, delete, exists as they were)
-# Only replace the save method below
 
     async def save(self, entity: EntityType) -> EntityType:
         """
@@ -284,7 +277,6 @@ class BaseRepository(Generic[EntityType, ModelType, PrimaryKeyType]):
         logging.info(f"[Save] Entity saved/updated successfully (Final PK: {final_pk_value}).")
         return entity_to_return
 
-
     async def find_by_id(self, entity_id: PrimaryKeyType) -> Optional[EntityType]:
         """Finds an entity by its primary key using db.get()."""
         if not self._pk_attr_names:
@@ -310,7 +302,6 @@ class BaseRepository(Generic[EntityType, ModelType, PrimaryKeyType]):
         logging.debug(f"[FindAll] Found {len(db_objs)} DB objects. Converting to entities.")
         entities = [await self._convert_to_entity(db_obj) for db_obj in db_objs]
         return [entity for entity in entities if entity is not None]
-
 
     async def delete(self, entity_id: PrimaryKeyType) -> bool:
         """Deletes an entity by its primary key."""
@@ -350,6 +341,18 @@ class BaseRepository(Generic[EntityType, ModelType, PrimaryKeyType]):
         does_exist = result.scalar_one_or_none()
         logging.debug(f"[Exists] Result for ID {entity_id}: {does_exist}")
         return bool(does_exist)
+
+    async def get_by_field(self, field_name: str, value: Any) -> Optional[EntityType]:
+        """
+        Fetch an entity by a specific field and value.
+        """
+        field = getattr(self.model_cls, field_name, None)
+        if field is None:
+            raise ValueError(f"Field '{field_name}' does not exist on model {self.model_cls.__name__}.")
+        
+        result = await self.db.execute(select(self.model_cls).where(field == value))
+        db_obj = result.scalar_one_or_none()
+        return await self._convert_to_entity(db_obj) if db_obj else None
 
 
 # END OF FILE app/game_state/repositories/base_repository.py

@@ -3,7 +3,7 @@
 
 # --- Core Python Imports ---
 import uuid
-from uuid import UUID
+from uuid import UUID,uuid4
 import enum
 from datetime import datetime, date, time # Import date/time types as needed
 from typing import Optional, List, Dict, Any # For Python type hinting
@@ -65,72 +65,45 @@ from app.game_state.enums.shared import StatusEnum, RarityEnum
 # --- Entity Definition ---
 # Rename 'TemplateEntity' and adjust inheritance if needed
 @dataclass
-class Item(BaseEntity): # Inherit from your domain BaseEntity if applicable
+class Item(BaseEntity):  # Inherit from your domain BaseEntity
     """
     ITEM TEMPLATE (@dataclass).
     Represents the internal state and data for core game logic.
     """
-    # --- Override/Use Base Fields ---
-    # entity_id and name might be inherited from BaseEntity.
-    # If BaseEntity doesn't have defaults, provide them or make them required here.
-    # Example overriding inherited defaults if needed (usually not necessary):
-    # entity_id: uuid.UUID = field(default_factory=uuid.uuid4)
-    # name: str = "Default Template Name"
+    # --- Override BaseEntity Fields ---
+    entity_id: UUID = field(default_factory=uuid4, init=False)  # Exclude from constructor
+    name: str = field(default="Unnamed Entity", init=False)  # Exclude from constructor
 
     # --- Required Fields (Specific to this Entity) ---
-    # Fields without defaults MUST come before fields with defaults
-    # (unless using KW_ONLY)
-    slot: str # Example: must be provided on creation
-
+    slot: str  # Must be provided on creation
 
     # --- Optional Basic Types ---
-    # Use Optional[...] for fields that can be None
     description: Optional[str] = None
     count: Optional[int] = None
     value: Optional[float] = None
-    is_important: bool = False # Example with a simple default
+    is_important: bool = False
 
     # --- Domain Enum ---
-    status: StatusEnum = StatusEnum.ACTIVE # Default value
-    rarity: RarityEnum = RarityEnum.COMMON # Default value
-    for_sale_at: Optional[UUID] = None # Example with a simple default
-    base_price: Optional[float] = None # Example with a simple default
-    reputation_modifier: Optional[float] = None # Example with a simple default
+    status: StatusEnum = StatusEnum.ACTIVE
+    rarity: RarityEnum = RarityEnum.COMMON
+    for_sale_at: Optional[UUID] = None
+    base_price: Optional[float] = None
+    reputation_modifier: Optional[float] = None
 
     # --- Date/Time Fields ---
-    # Often optional, populated during logic or persistence
     event_timestamp: Optional[datetime] = None
     start_date: Optional[date] = None
 
-    # --- Complex Types (Dictionaries, Lists of Primitives, Lists of Entities) ---
-    # Use default_factory for mutable types!
+    # --- Complex Types ---
     metadata: Dict[str, Any] = field(default_factory=dict)
     tags: List[str] = field(default_factory=list)
-    related_entities: List[RelatedEntity] = field(default_factory=list) # List of other domain entities
+    related_entities: List[RelatedEntity] = field(default_factory=list)
 
-    # --- Links to other Entities (by ID) ---
-    # Store the UUID of the related entity
+    # --- Links to other Entities ---
     related_entity_id: Optional[uuid.UUID] = None
 
-    # --- Timestamps (Usually Optional in Domain, set by Repo/DB) ---
+    # --- Timestamps ---
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-
-    # --- Dataclass Configuration ---
-    # @dataclass arguments (optional):
-    # init=True (default): generate __init__
-    # repr=True (default): generate __repr__
-    # eq=True (default): generate __eq__
-    # order=False (default): set True to generate comparison methods (__lt__, etc.)
-    # unsafe_hash=False (default): set True to generate __hash__ if __eq__ is True (or implement manually)
-    # frozen=False (default): set True to make instances immutable after creation
-
-    # --- Domain Logic Methods (Optional) ---
-    # Keep these focused on the entity's own state/rules.
-    # Complex orchestration belongs in Services/Managers.
-    # def update_status(self, new_status: ExampleStatusEnum):
-    #     # Example logic
-    #     if self.status != ExampleStatusEnum.DELETED:
-    #          self.status = new_status
 
 # --- END OF FILE app/game_state/entities/_template_entity.py ---

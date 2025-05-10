@@ -22,26 +22,26 @@ EXAMPLE_THEME_FANTASY = uuid4()
 EXAMPLE_THEME_MEDIEVAL = uuid4()
 
 create_example_body = {
-    "summary": "Example Blacksmith", # Add a summary for the example itself
+    "summary": "Example Blacksmith", 
     "description": "A basic example for creating a Blacksmith profession definition.",
-    "value": { # This is the actual example dictionary matching ProfessionDefinitionCreate
+    "value": {
         "name": "blacksmith_common",
         "display_name": "Blacksmith",
         "description": "A craftsman who forges metal items like tools and weapons.",
         "category": "CRAFTING",
         "skill_requirements": [
             {"skill_id": "forging", "level": 3},
-            {"skill_id": "strength", "level": 5} # Example using a base stat ID
+            {"skill_id": "strength", "level": 5}
         ],
-        "available_theme_ids": [str(EXAMPLE_THEME_FANTASY), str(EXAMPLE_THEME_MEDIEVAL)], # Use example UUIDs converted to string
+        "available_theme_ids": [str(EXAMPLE_THEME_FANTASY), str(EXAMPLE_THEME_MEDIEVAL)], 
         "valid_unlock_methods": ["npc_teacher", "item_manual"],
         "unlock_condition_details": [
-            {"type": "npc_teacher", "target_id": "master_blacksmith_prof_id"}, # Refers to another profession ID
-            {"type": "item_manual", "target_id": "item_basic_smithing_guide"}  # Refers to an Item ID
+            {"type": "npc_teacher", "target_id": "master_blacksmith_prof_id"},
+            {"type": "item_manual", "target_id": "item_basic_smithing_guide"}  
         ],
-        "python_class_override": None, # No specific class needed for this example
-        "archetype_handler": "GenericCrafter", # Handled by a generic crafter logic
-        "configuration_data": { # Config for the GenericCrafter
+        "python_class_override": None, 
+        "archetype_handler": "GenericCrafter", 
+        "configuration_data": { 
             "recipes_known": ["dagger_iron", "horseshoe"],
             "tool_required": "hammer_smithing",
             "workbench_required": "forge_basic"

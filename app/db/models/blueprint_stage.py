@@ -11,10 +11,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 
 from .base import Base
-# Import models needed for relationships
-
-from typing import TYPE_CHECKING # Use for complex type hinting if needed
-
+# Import related models for type hinting within TYPE_CHECKING block
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .building_blueprint import BuildingBlueprint
     from .stage_resource_cost import StageResourceCost
@@ -32,7 +30,7 @@ class BlueprintStage(Base):
 
     building_blueprint_id: Mapped[uuid.UUID] = mapped_column(
         pgUUID(as_uuid=True),
-        ForeignKey("building_blueprints.id", name="fk_stage_blueprint_id", ondelete="CASCADE"), # Link to blueprint
+        ForeignKey("building_blueprints.id", name="fk_stage_bp_id", ondelete="CASCADE"), # Shortened FK name
         nullable=False,
         index=True
     )
@@ -59,13 +57,13 @@ class BlueprintStage(Base):
     # Relationship back to the parent Blueprint
     blueprint: Mapped["BuildingBlueprint"] = relationship(
         "BuildingBlueprint",
-        back_populates="stages"
+        back_populates="stages" # Matches 'stages' relationship in BuildingBlueprint
     )
 
     # Relationship to Resource Costs for this stage
     resource_costs: Mapped[List["StageResourceCost"]] = relationship(
         "StageResourceCost",
-        back_populates="stage",
+        back_populates="stage", # Matches 'stage' in StageResourceCost
         cascade="all, delete-orphan",
         lazy="selectin"
     )
@@ -73,18 +71,22 @@ class BlueprintStage(Base):
     # Relationship to Profession Costs for this stage
     profession_costs: Mapped[List["StageProfessionCost"]] = relationship(
         "StageProfessionCost",
-        back_populates="stage",
+        back_populates="stage", # Matches 'stage' in StageProfessionCost
         cascade="all, delete-orphan",
         lazy="selectin"
     )
 
-    # Timestamps for the stage definition itself (less critical than blueprint timestamps maybe)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now())
+    # Timestamps for the stage definition itself
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False # Added timezone=True
+    )
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), onupdate=func.now(), nullable=True # Added timezone=True, made nullable
+    )
 
     __table_args__ = (
-        UniqueConstraint('building_blueprint_id', 'stage_number', name='uq_blueprint_stage_number'),
-        Index('ix_blueprint_stage_blueprint_id_stage_number', 'building_blueprint_id', 'stage_number'),
+        UniqueConstraint('building_blueprint_id', 'stage_number', name='uq_bp_stage_number'), # Shortened
+        Index('ix_bp_stage_bp_id_stage_number', 'building_blueprint_id', 'stage_number'), # Shortened
         # {'schema': 'my_schema'}
     )
 

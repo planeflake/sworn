@@ -5,63 +5,63 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any
 
 from sqlalchemy import (
-    Integer, String, Text, DateTime, func, Table, Column, ForeignKey
+    Integer, String, Text, DateTime, func, Table, Column, ForeignKey, text
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
-from sqlalchemy.sql import text
+
 from .base import Base
-# Import Character only needed for type hinting if using TYPE_CHECKING
+
+# TYPE CHECKING IMPORTS
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from .character import Character
+    from .character import Character # This import should now work if character_skills_association is defined first
 
 # --- Association Table Definition (Many-to-Many Character <-> Skill) ---
-# Place this *before* the Skill class if Skill references it, or import if separate file
-character_skills_association = Table(
-    "character_skills", # Table name in the database
-    Base.metadata,
-    Column("character_id", pgUUID(as_uuid=True), ForeignKey("characters.id", ondelete="CASCADE"), primary_key=True),
-    Column("skill_id", pgUUID(as_uuid=True), ForeignKey("skills.id", ondelete="CASCADE"), primary_key=True),
-    # Add other columns to the association if needed (e.g., proficiency level/xp)
-    Column("level", Integer, nullable=False, default=1, server_default='1'),
-    Column("xp", Integer, nullable=False, default=0, server_default='0')
-)
-# --- END Association Table ---
+# It's often good practice to define association tables before the models that use them,
+# or ensure they are imported if defined elsewhere (like in character.py).
+# If character_skills_association is defined in character.py, you might need to
+# import it here, or ensure character.py is imported before skill.py in __init__.py
+# For simplicity, let's assume it's defined here if not already in character.py
+# and character.py will use the string "character_skills_association"
 
+# Re-defining it here for completeness in this file,
+# BUT ensure it's defined ONLY ONCE in your project.
+# If defined in character.py, remove or comment out this definition.
+# character_skills_association = Table(
+#     "character_skills",
+#     Base.metadata,
+#     Column("character_id", pgUUID(as_uuid=True), ForeignKey("characters.id", ondelete="CASCADE"), primary_key=True),
+#     Column("skill_id", pgUUID(as_uuid=True), ForeignKey("skills.id", ondelete="CASCADE"), primary_key=True),
+#     Column("level", Integer, nullable=False, default=1, server_default='1'),
+#     Column("xp", Integer, nullable=False, default=0, server_default='0')
+# )
+# Instead, import it if it's defined in character.py:
+from .character import character_skills_association
 
 class Skill(Base):
     """
     SQLAlchemy ORM Model for Skill Definitions.
-    Represents the definition of a skill available in the game.
     """
-    __tablename__ = 'skills' # Table for skill *definitions*
+    __tablename__ = 'skills'
 
     id: Mapped[uuid.UUID] = mapped_column(
         pgUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
     )
-
-    # Use 'skill_id_name' or similar if you prefer a unique string identifier
-    # skill_id_name: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
-
-    name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, index=True, unique=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    max_level: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    max_level: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=100, server_default='100')
 
-    # Relationship to Characters who have learned this skill (via association table)
-    characters: Mapped[List["Character"]] = relationship(
+    # Relationship to Characters who have learned this skill
+    characters_with_skill: Mapped[List["Character"]] = relationship( # Renamed for clarity
         "Character",
-        secondary=character_skills_association, # Link through the association table
+        secondary=character_skills_association,
         back_populates="skills", # Matches 'skills' relationship in Character model
         lazy="selectin"
     )
 
-    # Optional: Link to themes if skills are theme-specific
-    # theme_id: Mapped[Optional[uuid.UUID]] = mapped_column(pgUUID(as_uuid=True), ForeignKey("themes.id"), nullable=True, index=True)
-
-    # --- Timestamps ---
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now(), nullable=True)
 
     def __repr__(self) -> str:
         return f"<Skill(id={self.id!r}, name={self.name!r})>"

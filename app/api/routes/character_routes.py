@@ -7,6 +7,8 @@ import random
 from app.game_state.services.world_service import WorldService
 from app.game_state.models.character import CharacterApiModel
 from app.game_state.services.character_service import CharacterService
+from app.game_state.managers.character_manager import CharacterManager
+from app.game_state.enums.character import CharacterTypeEnum
 from uuid import UUID
 from typing import Optional
 from datetime import datetime
@@ -34,10 +36,32 @@ class CharacterRead(BaseModel):
             }
         }
 
+class CharacterCreate(BaseModel):
+    """Request model for creating a Character"""
+    world_id: UUID
+    name: str = None
+    character_type: str = None
+    description: Optional[str] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "name": f"test_Character_{random.randint(1, 1000)}",
+                "world_id": "9368e202-a217-464c-953d-78ea89dacb01",
+                "character_type": "npc",
+                "description": "test character",
+            }
+        }
+
 class CharacterCreatedResponse(BaseModel):
     """Response model for Character creation"""
-    Character: CharacterRead
-    message: str
+    id: UUID
+    name: str
+    description: str
+    character_type: CharacterTypeEnum
+    world_id: UUID
+    created_at: datetime
+    updated_at: Optional[datetime]
 
     class config:
         from_attributes = True
@@ -109,11 +133,9 @@ async def get_Characters_by_player(
         logging.exception(f"Error retrieving Characters by player: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
 
-@router.post("/Characters", response_model=CharacterCreatedResponse)
+@router.post("/Characters") #, response_model=CharacterCreatedResponse)
 async def create_Character(
-        Character_name: str = Body(..., embed=True),
-        Character_description: Optional[str] = Body(...,embed=True),
-        world_id: str = Body(..., embed=True),
+        Character_data: CharacterCreate,
         db: AsyncSession = Depends(get_async_db)
     ):
     """
@@ -126,39 +148,15 @@ async def create_Character(
     """
     try:
 
-        if world_id is None:
-            logging.info("No world_id provided, using default world_id for testing.")
-            world_id = "9368e202-a217-464c-953d-78ea89dacb01" # Default world ID for testing
+        character_service = CharacterService(db)
 
-        # Validate world_id format (UUID)
-        world_service = WorldService(db=db)
-        world_exists = await world_service.exists(world_id=world_id)
-        if not world_exists:
-            raise HTTPException(status_code=404, detail="Invalid world ID provided.")
-            
-        # Generate random Character name if not provided - only exists for testing.
-        if Character_name is None:
-            logging.info("No Character_name provided, generating a random test Character name.")
-            Character_name = f"test_Character_{random.randint(1, 1000)}"
-        
-        Character_service = CharacterService(db=db)
+        character = await character_service.create_character(character_data=Character_data)
 
-        # Check if Character name already exists in the world
-        existing_Character = await Character_service.get_by_name(name=Character_name, world_id=world_id)
-        if existing_Character:
-            raise HTTPException(status_code=400, detail="Character name already exists in the world.")
-
-        # CharacterService.create_Character must be async and take AsyncSession
-        Character = await CharacterService.create(
-            Character_service,
-            name=Character_name,
-            description=Character_description,
-            world_id=world_id
-        )
-        
+        logging.info(f"Creating Character: {character}")
         # Return the response
+        return character
         return CharacterCreatedResponse(
-            Character=Character, 
+            Character=character, 
             message="Character created successfully"
         )
     except Exception as e:
