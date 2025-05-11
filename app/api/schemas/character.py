@@ -1,8 +1,8 @@
-from typing import Optional
-from datetime import datetime
-from uuid import UUID
-from pydantic import BaseModel 
 from app.game_state.enums.character import CharacterTypeEnum
+from datetime import datetime
+from pydantic import BaseModel
+from typing import Optional
+from uuid import UUID
 import random
 
 class CharacterRead(BaseModel):

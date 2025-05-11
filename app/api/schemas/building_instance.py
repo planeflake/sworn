@@ -118,8 +118,8 @@ class BuildingInstanceUpdate(BaseModel):
     current_stage_number: Optional[int] = Field(None, ge=0)
 
     active_features: Optional[List[uuid.UUID]] = None
-    stored_resources: Optional[Dict[uuid.UUID, int]] = None
-    assigned_workers_details: Optional[Dict[str, int]] = None
+    stored_resources: Dict[str, int] = Field(default_factory=dict, description="Resources stored (resource_id_str: quantity).")
+    assigned_workers_details: Dict[str, int] = Field(default_factory=dict, description="Detailed worker assignments (role_str/profession_id_str: count).")
     instance_description: Optional[str] = Field(None, max_length=500)
 
     # Pydantic V2 model_config for examples

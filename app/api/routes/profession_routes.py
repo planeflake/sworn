@@ -1,23 +1,18 @@
 # --- START OF FILE app/api/routes/profession_routes.py ---
 
-import logging
-from uuid import UUID, uuid4 # Import uuid4 to generate example IDs
-from typing import List, Optional
-
 from fastapi import APIRouter, Depends, HTTPException, Body, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.db.dependencies import get_async_db
 from app.game_state.services.profession_service import ProfessionService
 from app.game_state.schemas.profession_schema import (
     ProfessionDefinitionRead,
     ProfessionDefinitionCreate,
     ProfessionDefinitionUpdate,
 )
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.dependencies import get_async_db
+from typing import List, Optional
+from uuid import UUID, uuid4
+import logging
 
-# Define example data for the creation request body
-# Use realistic but clearly example data
-# Generate some fake UUIDs for themes
 EXAMPLE_THEME_FANTASY = uuid4()
 EXAMPLE_THEME_MEDIEVAL = uuid4()
 
@@ -74,7 +69,6 @@ create_example_body_innkeeper = {
         }
     }
 }
-
 
 router = APIRouter(
 )

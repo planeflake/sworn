@@ -81,7 +81,6 @@ class BuildingBlueprintRepository(BaseRepository[BuildingBlueprintEntity, Buildi
             logging.error(f"Data for instantiation: {blueprint_data}")
             return None
 
-
     async def _entity_to_model_dict(self, entity: BuildingBlueprintEntity, is_new: bool = False) -> Dict[str, Any]:
         """
         Converts domain entity (BuildingBlueprintEntity with nested stages/features)
@@ -111,7 +110,6 @@ class BuildingBlueprintRepository(BaseRepository[BuildingBlueprintEntity, Buildi
             model_data.pop('id', None) # Let DB generate ID if it's server-defaulted
 
         return model_data
-
 
     async def find_by_id_with_details(self, blueprint_id: uuid.UUID) -> Optional[BuildingBlueprintEntity]:
         """Finds a blueprint by ID and eagerly loads its stages and their features."""
@@ -160,91 +158,101 @@ class BuildingBlueprintRepository(BaseRepository[BuildingBlueprintEntity, Buildi
         db_obj = result.scalar_one_or_none()
         return await self._convert_to_entity(db_obj)
 
-
     async def save_blueprint_with_stages(self, blueprint_entity: BuildingBlueprintEntity) -> BuildingBlueprintEntity:
-        """
-        Saves a complete blueprint entity, including its stages and features.
-        This is a complex operation that involves creating/updating multiple related DB objects.
-        This method demonstrates a full replacement or creation strategy.
-        More granular updates (add/remove stage/feature) would need separate methods.
-        """
-        # This is a simplified example. A robust implementation needs to handle:
-        # 1. Existing blueprint? -> Update or error?
-        # 2. Existing stages/features? -> Update, delete and recreate, or merge?
-        # For creation of a NEW blueprint with all its parts:
+        db_blueprint_to_save: Optional[BuildingBlueprintDB] = None # Use a new variable name for clarity
         
-        # Check if blueprint with this name and theme_id already exists if that's a constraint
-        # existing_bp = await self.find_by_name(blueprint_entity.name, blueprint_entity.theme_id)
-        # if existing_bp and (blueprint_entity.entity_id is None or existing_bp.entity_id != blueprint_entity.entity_id):
-        #    raise ValueError(f"Blueprint with name '{blueprint_entity.name}' and theme '{blueprint_entity.theme_id}' already exists.")
+        if blueprint_entity.entity_id: # UPDATE PATH
+            logging.debug(f"Attempting to fetch existing blueprint for update: {blueprint_entity.entity_id}")
+            db_blueprint_instance = await self.db.get( # Use a different var name to avoid confusion
+                BuildingBlueprintDB,
+                blueprint_entity.entity_id,
+                options=[ 
+                    selectinload(BuildingBlueprintDB.stages).selectinload(BlueprintStageDB.optional_features)
+                ]
+            )
 
+            if db_blueprint_instance:
+                logging.debug(f"Found existing blueprint {db_blueprint_instance.id} for update.")
+                # Update top-level fields
+                update_data = await self._entity_to_model_dict(blueprint_entity, is_new=False)
+                update_data.pop('id', None); update_data.pop('stages', None)
+                for key, value in update_data.items(): setattr(db_blueprint_instance, key, value)
+                
+                # Clear existing stages for "delete and recreate"
+                if db_blueprint_instance.stages: 
+                    logging.debug(f"Deleting {len(db_blueprint_instance.stages)} existing stages for update.")
+                    for stage_to_remove in list(db_blueprint_instance.stages): await self.db.delete(stage_to_remove)
+                    # A flush here is needed to execute the deletes before potentially re-adding
+                    # items with the same natural keys (if stages had unique constraints beyond PK)
+                    # or if new stages might conflict.
+                    await self.db.flush()
+                    db_blueprint_instance.stages.clear() # Clear Python collection
+                
+                db_blueprint_to_save = db_blueprint_instance # This is the object we'll add new stages to
+            else:
+                logging.warning(f"Blueprint with ID {blueprint_entity.entity_id} for update not found. Will create as new.")
+                # Falls through, db_blueprint_to_save will be None, triggering create logic
 
-        db_blueprint = None
-        if blueprint_entity.entity_id: # Attempt to fetch if ID is provided (update scenario)
-            db_blueprint = await self.db.get(BuildingBlueprintDB, blueprint_entity.entity_id, 
-                                             options=[selectinload(BuildingBlueprintDB.stages)
-                                                      .selectinload(BlueprintStageDB.optional_features)])
-
-        if db_blueprint is None: # Create new blueprint
+        if db_blueprint_to_save is None:  # CREATE new blueprint path
+            logging.debug(f"Creating new blueprint: {blueprint_entity.name}")
             blueprint_model_data = await self._entity_to_model_dict(blueprint_entity, is_new=True)
-            # Pop relationship fields if they accidentally got into model_data
-            blueprint_model_data.pop('stages', None)
-            db_blueprint = BuildingBlueprintDB(**blueprint_model_data)
-            self.db.add(db_blueprint)
-            await self.db.flush() # Flush to get db_blueprint.id if it's new
-        else: # Update existing blueprint's top-level fields
-            update_data = await self._entity_to_model_dict(blueprint_entity, is_new=False)
-            update_data.pop('id', None) # Don't update PK
-            update_data.pop('stages', None)
-            for key, value in update_data.items():
-                setattr(db_blueprint, key, value)
-        
-        # --- Handle Stages and Features (Example: Delete and Recreate strategy for simplicity) ---
-        # A more sophisticated approach would diff and update existing stages/features.
-        
-        # Clear existing stages for this blueprint if updating (delete-orphan cascade should handle features)
-        if db_blueprint.stages:
-            for stage_to_remove in list(db_blueprint.stages): # Iterate over a copy
-                 await self.db.delete(stage_to_remove) # This will cascade to features due to delete-orphan
-            await self.db.flush() # Ensure deletions are processed
-            db_blueprint.stages.clear() # Clear the ORM collection
+            blueprint_model_data.pop('stages', None) # Remove stages data from parent dict
+            
+            # Create the parent DB object, but DON'T add stages to it yet via kwargs
+            db_blueprint_to_save = BuildingBlueprintDB(**blueprint_model_data)
+            self.db.add(db_blueprint_to_save) # Add parent to session
+            # DO NOT FLUSH YET. Let's build the whole graph in Python first.
 
-        # Create new stages and features from the entity
+        # --- Construct the new stages and features as Python objects ---
+        # These will be associated with db_blueprint_to_save.
+        # The db_blueprint_to_save object is now either a new transient object added to the session,
+        # or an existing persistent object whose stages collection was cleared.
+
+        new_stages_for_blueprint = []
         for stage_entity in blueprint_entity.stages:
-            db_stage = BlueprintStageDB(
-                # id=stage_entity.entity_id, # If you want to control IDs from entity
-                building_blueprint_id=db_blueprint.id, # Link to parent blueprint
+            db_stage_obj = BlueprintStageDB(
                 name=stage_entity.name,
                 stage_number=stage_entity.stage_number,
                 description=stage_entity.description,
                 duration_days=stage_entity.duration_days,
                 resource_costs=stage_entity.resource_costs,
                 profession_time_bonus=stage_entity.profession_time_bonus,
-                stage_completion_bonuses=stage_entity.stage_completion_bonuses
-                # created_at, updated_at are server_default
+                stage_completion_bonuses=stage_entity.stage_completion_bonuses,
+                # building_blueprint_id will be set by relationship assignment/cascade
             )
-            # self.db.add(db_stage) # Adding via relationship below is often preferred
-
+            
+            new_features_for_stage = []
             for feature_entity in stage_entity.optional_features:
                 db_feature = BlueprintStageFeatureDB(
-                    # id=feature_entity.entity_id,
-                    # blueprint_stage_id will be set by relationship
                     name=feature_entity.name,
                     feature_key=feature_entity.feature_key,
                     description=feature_entity.description,
                     required_professions=feature_entity.required_professions,
                     additional_resource_costs=feature_entity.additional_resource_costs,
                     additional_duration_days=feature_entity.additional_duration_days,
-                    effects=feature_entity.effects
+                    effects=feature_entity.effects,
+                    # blueprint_stage_id will be set by relationship assignment/cascade
                 )
-                db_stage.optional_features.append(db_feature)
-            db_blueprint.stages.append(db_stage) # This associates stage with blueprint AND adds to session if blueprint is already persistent
+                new_features_for_stage.append(db_feature)
+            db_stage_obj.optional_features = new_features_for_stage # Assign features to this stage
+            
+            new_stages_for_blueprint.append(db_stage_obj)
 
-        await self.db.flush()
-        await self.db.refresh(db_blueprint, attribute_names=['stages']) # Refresh to get all children
-        for stage in db_blueprint.stages: # Refresh children's children
-            await self.db.refresh(stage, attribute_names=['optional_features'])
+        # Now, assign the fully constructed list of new stages (with their features)
+        # to the parent blueprint. This leverages SQLAlchemy's collection management and cascades.
+        db_blueprint_to_save.stages = new_stages_for_blueprint
+        
+        logging.debug(f"All stages and features prepared for blueprint {getattr(db_blueprint_to_save, 'id', 'NEW')}. Flushing session...")
+        await self.db.flush() # Persist parent (if new), all new stages, all new features, and updates to parent.
+                              # This single flush should handle the entire object graph due to cascades.
 
-        return await self._convert_to_entity(db_blueprint)
+        logging.debug(f"Refresh blueprint {db_blueprint_to_save.id} and its children post-save.")
+        await self.db.refresh(db_blueprint_to_save, attribute_names=['theme', 'stages'])
+        
+        if db_blueprint_to_save.stages:
+            for stage in db_blueprint_to_save.stages:
+                await self.db.refresh(stage, attribute_names=['optional_features'])
+        else:
+            logging.debug(f"No stages found for blueprint {db_blueprint_to_save.id} after refresh.")
 
-# --- END OF FILE app/game_state/repositories/building_blueprint_repository.py ---
+        return await self._convert_to_entity(db_blueprint_to_save)

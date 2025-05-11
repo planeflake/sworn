@@ -60,3 +60,30 @@ async def create_Theme(
         # Log the exception for debugging
         logging.exception(f"Error creating Theme: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+    
+@router.get("/{theme_id}", response_model=ThemeOutputResponse)
+async def get_Theme(
+        theme_id: str,
+        db: AsyncSession = Depends(get_async_db)
+    ):
+    """
+    Get a Theme by its ID.
+    
+    If the Theme is not found, a 404 error will be raised.
+    """
+    try:
+        theme_service = ThemeService(db=db)
+        theme = await theme_service.get_by_id(theme_id=theme_id)
+        
+        if not theme:
+            raise HTTPException(status_code=404, detail="Theme not found.")
+        
+        return ThemeOutputResponse(
+            theme=theme, 
+            message="Theme retrieved successfully"
+        )
+    except Exception as e:
+        # Log the exception for debugging
+        logging.exception(f"Error retrieving Theme: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+    

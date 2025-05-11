@@ -52,22 +52,19 @@ class SettlementCreate(BaseModel):
         }
     }
 
-
 class SettlementCreatedResponse(BaseModel):
     """Response model for Settlement creation"""
     settlement: SettlementRead
     message: str
 
-# SettlementOutputResponse seems unused by this specific endpoint, but if needed:
 class SettlementOutputResponse(BaseModel):
      """Response model for Settlement output"""
-     settlement: SettlementRead # Changed from SettlementEntity to Pydantic model
+     settlement: SettlementRead 
      message: str
 
      model_config = {
          "from_attributes": True
      }
-
 
 # --- Router ---
 router = APIRouter()

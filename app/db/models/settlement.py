@@ -1,9 +1,10 @@
 # --- START OF FILE app/db/models/settlement.py ---
 
 from sqlalchemy import Integer, String, DateTime, func, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
 from sqlalchemy.dialects.postgresql import JSONB
+from app.db.models.building_instance import BuildingInstanceDB
 from sqlalchemy.sql import text
 from .base import Base
 import uuid
@@ -59,6 +60,12 @@ class Settlement(Base):
         pgUUID(as_uuid=True),
         ForeignKey("characters.id"),
         nullable=True
+    )
+
+    building_instances: Mapped[List["BuildingInstanceDB"]] = relationship(
+        "BuildingInstanceDB",
+        back_populates="settlement",
+        cascade="all, delete-orphan"
     )
 
     # --- Timestamps (Already excluded from __init__) ---

@@ -1,50 +1,38 @@
 # --- START OF FILE app/db/models/theme.py ---
 
-import uuid # Import uuid for type hinting Mapped[uuid.UUID]
-from sqlalchemy import Column, String, Text, func, DateTime
-from sqlalchemy.orm import Mapped, mapped_column, relationship # Added relationship
-from sqlalchemy.dialects.postgresql import UUID as pgUUID # Renamed to pgUUID for clarity
-from sqlalchemy.sql import text
-from typing import Optional, List # Added List for relationship
-from .base import Base
+import uuid
 from datetime import datetime
+from typing import Optional, List # Added List
 
-# Import related models for type hinting within TYPE_CHECKING block
+from sqlalchemy import String, Text, DateTime, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import UUID as pgUUID
+
+from .base import Base
+
+# TYPE CHECKING IMPORTS
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from .building_blueprint import BuildingBlueprint # For the relationship
+    from .building_blueprint import BuildingBlueprint # For the back_populates
 
 class Theme(Base):
-    """Theme model for SQLAlchemy ORM"""
     __tablename__ = 'themes'
 
-    id: Mapped[uuid.UUID] = mapped_column( # Changed from UUID to uuid.UUID for consistency
-        pgUUID(as_uuid=True),
-        primary_key=True,
-        server_default=text("gen_random_uuid()")
-    )
-    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True, index=True) # Added index
+    id: Mapped[uuid.UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False # Added timezone=True
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False # Added timezone=True
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
 
-    # --- Relationship to BuildingBlueprints ---
-    # One Theme can have many BuildingBlueprints
+    # Relationship to BuildingBlueprints
     building_blueprints: Mapped[List["BuildingBlueprint"]] = relationship(
         "BuildingBlueprint",
-        back_populates="theme", # Matches 'theme' relationship in BuildingBlueprint
-        cascade="all, delete-orphan", # Optional: if deleting a theme deletes its blueprints
-        lazy="selectin"
+        back_populates="theme", # Matches 'theme' in BuildingBlueprint model
+        cascade="all, delete-orphan" # Optional: if deleting a theme deletes its blueprints
     )
 
-    # Add other columns corresponding to the entity
-
     def __repr__(self) -> str:
-        return f"<Theme(id={self.id!r}, name='{self.name!r}')>" # Used !r for id and name
+        return f"<Theme(id={self.id!r}, name={self.name!r})>"
 
 # --- END OF FILE app/db/models/theme.py ---

@@ -1,18 +1,15 @@
+from app.game_state.services.character_service import CharacterService
+from app.game_state.models.character import CharacterApiModel
+from app.game_state.enums.character import CharacterTypeEnum
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.dependencies import get_async_db 
-import logging
 from pydantic import BaseModel
-import random
-from app.game_state.services.world_service import WorldService
-from app.game_state.models.character import CharacterApiModel
-from app.game_state.services.character_service import CharacterService
-from app.game_state.managers.character_manager import CharacterManager
-from app.game_state.enums.character import CharacterTypeEnum
-from uuid import UUID
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+from uuid import UUID
 import random
+import logging
 
 class CharacterRead(BaseModel):
     id: UUID
@@ -84,7 +81,7 @@ class CharacterOutputResponse(BaseModel):
 
 router = APIRouter()
 
-@router.get("/Characters/{Character_id}", response_model=CharacterOutputResponse)
+@router.get("/{Character_id}", response_model=CharacterOutputResponse)
 async def get_Character(
         Character_id: UUID,
         db: AsyncSession = Depends(get_async_db)
@@ -110,7 +107,7 @@ async def get_Character(
         logging.exception(f"Error retrieving Character: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
 
-@router.get("/Characters/{player_id}", response_model=list[CharacterOutputResponse])
+@router.get("/{player_id}", response_model=list[CharacterOutputResponse])
 async def get_Characters_by_player(
         player_id: UUID,
         db: AsyncSession = Depends(get_async_db)
@@ -133,7 +130,7 @@ async def get_Characters_by_player(
         logging.exception(f"Error retrieving Characters by player: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
 
-@router.post("/Characters") #, response_model=CharacterCreatedResponse)
+@router.post("/") #, response_model=CharacterCreatedResponse)
 async def create_Character(
         Character_data: CharacterCreate,
         db: AsyncSession = Depends(get_async_db)
@@ -164,7 +161,7 @@ async def create_Character(
         logging.exception(f"Error creating Character: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
     
-@router.post("/Characters/{Character_id}/add_resources")
+@router.post("/{Character_id}/add_resources")
 async def add_resources_to_Character(
         Character_id: UUID,
         resources: list,

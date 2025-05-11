@@ -18,18 +18,6 @@ class ThemeService:
         self.repository = ThemeRepository(db=self.db)
         logging.debug("ThemeService initialized with ThemeRepository.")
 
-    # --- Optional: Add API Model Conversion if Theme has its own API model ---
-    # @staticmethod
-    # def _convert_domain_to_api_theme(domain_entity: Optional[ThemeEntity]) -> Optional[ThemeApiModel]:
-    #    # ... implementation ...
-    #    pass
-
-    # @staticmethod
-    # def _convert_api_to_domain_theme(api_model: Optional[ThemeApiModel]) -> Optional[ThemeEntity]:
-    #    # ... implementation ...
-    #    pass
-    # ---
-
     async def exists(self, theme_id: UUID) -> bool:
         """Check if a theme exists by ID."""
         logging.debug(f"[ThemeService] Checking existence for theme ID: {theme_id}")
@@ -96,6 +84,5 @@ class ThemeService:
             logging.error(f"[ThemeService] Error getting all themes: {e}", exc_info=True)
             return []
 
-    # Add update, delete methods as needed
 
 # --- END OF FILE app/game_state/services/theme_service.py ---

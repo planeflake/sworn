@@ -15,10 +15,7 @@ from app.api.schemas.building_blueprint_schema import (
     BuildingBlueprintUpdate,
 )
 
-router = APIRouter(
-    prefix="/building-blueprints",
-    tags=["Building Blueprints"] # This tag will group these endpoints in Swagger UI
-)
+router = APIRouter()
 
 # Dependency to get the service
 def get_blueprint_service(db: AsyncSession = Depends(get_async_db)):

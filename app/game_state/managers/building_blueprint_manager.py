@@ -26,25 +26,41 @@ class BuildingBlueprintManager(BaseManager): # Inherit from BaseManager
 
     @staticmethod
     def create_transient_feature(
-        schema_data: BlueprintStageFeatureCreate, # Or pass individual fields
-        parent_stage_id: uuid.UUID, # Transient ID for linking if needed before saving
+        schema_data: BlueprintStageFeatureCreate,
+        parent_stage_id: uuid.UUID,
         feature_id: Optional[uuid.UUID] = None
     ) -> BlueprintStageFeatureEntity:
         if feature_id is None:
-            feature_id = uuid.uuid4() # Or let BaseManager handle it if creating one-by-one
+            feature_id = uuid.uuid4()
+
+        # Convert UUIDs in required_professions to strings
+        str_required_professions = [str(prof_id) for prof_id in schema_data.required_professions]
+
+        # Convert UUIDs within additional_resource_costs if 'resource_id' is a UUID object
+        # Your current payload sends strings for resource_id, so this might not be needed
+        # if the schema_data already has them as strings. But if it could be UUIDs:
+        str_additional_resource_costs = []
+        if schema_data.additional_resource_costs:
+            for cost_item in schema_data.additional_resource_costs:
+                item_copy = cost_item.copy() # Avoid modifying original schema data
+                if 'resource_id' in item_copy and isinstance(item_copy['resource_id'], uuid.UUID):
+                    item_copy['resource_id'] = str(item_copy['resource_id'])
+                str_additional_resource_costs.append(item_copy)
+        else:
+            str_additional_resource_costs = [] # Ensure it's an empty list if None
 
         return BlueprintStageFeatureEntity(
             entity_id=feature_id,
             name=schema_data.name,
-            blueprint_stage_id=parent_stage_id, # Important for relational context
+            blueprint_stage_id=parent_stage_id,
             feature_key=schema_data.feature_key,
             description=schema_data.description,
-            required_professions=schema_data.required_professions,
-            additional_resource_costs=schema_data.additional_resource_costs,
+            required_professions=str_required_professions, # Use string list
+            additional_resource_costs=str_additional_resource_costs, # Use list with string resource_ids
             additional_duration_days=schema_data.additional_duration_days,
-            effects=schema_data.effects,
-            created_at=datetime.now(timezone.utc), # Set by entity default usually
-            updated_at=datetime.now(timezone.utc)  # Set by entity default usually
+            effects=schema_data.effects, # Ensure effects dict doesn't contain UUIDs as keys or non-serializable values
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
         )
 
     @staticmethod

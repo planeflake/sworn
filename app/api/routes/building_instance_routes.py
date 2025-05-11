@@ -1,24 +1,21 @@
 # --- START OF FILE app/api/routes/building_instance_routes.py ---
 
-import logging
-from uuid import UUID
-import uuid
-from typing import List, Optional
-
-from fastapi import APIRouter, Depends, HTTPException, Body, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.db.dependencies import get_async_db # Your DB session dependency
 from app.game_state.services.building_instance_service import BuildingInstanceService
 from app.api.schemas.building_instance import (
     BuildingInstanceRead,
     BuildingInstanceCreate,
     BuildingInstanceUpdate,
 )
+from fastapi import APIRouter, Depends, HTTPException, Body, Query, status
+from app.db.dependencies import get_async_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List, Optional
+from uuid import UUID
+import logging
+import uuid
 
 router = APIRouter()
 
-# Example body for creation - adapt with real UUIDs from your system
 EXAMPLE_BLUEPRINT_ID = uuid.uuid4()
 EXAMPLE_SETTLEMENT_ID = uuid.uuid4()
 
@@ -125,7 +122,6 @@ async def delete_building_instance(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Building instance not found")
     return None
 
-# Example of a more complex action endpoint
 @router.post(
     "/{instance_id}/advance-construction",
     response_model=BuildingInstanceRead,
@@ -149,6 +145,5 @@ async def advance_building_construction(
     except Exception as e:
         logging.exception(f"Error advancing construction for building {instance_id}: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error.")
-
 
 # --- END OF FILE app/api/routes/building_instance_routes.py ---

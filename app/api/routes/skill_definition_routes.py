@@ -16,8 +16,6 @@ from app.game_state.schemas.skill_definition_schema import (
 )
 
 router = APIRouter(
-    prefix="/skills", # Endpoint prefix
-    tags=["Skill Definitions"], # Tag for API docs
 )
 
 # Define an example for creation
