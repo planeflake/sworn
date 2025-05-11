@@ -1,0 +1,126 @@
+{
+    "name": "Watchtower",
+    "description": "A small tower that can be used to spot enemies from a distance.",
+    "theme_id": "dfba10ac-eaa7-4f83-977d-def25746dfb5",
+    "stages": [
+      {
+        "building_blueprint_id": 1,
+        "stage_number": 1,
+        "name": "Watchtower Base",
+        "description": "Watchtower base consisting almost completely of stone.",
+        "duration_days": 3,
+        "resource_costs": [
+          { "resource_id": "57cf8bd0-e6c6-47e1-98b0-1e4c46decd04", "amount": 100 },
+          { "resource_id": "e080d5d3-4985-4bd7-b7bf-9e676beebd42", "amount": 50 }
+        ],
+        "profession_time_bonus": [
+          { "profession_id": "b5c7fabf-6ee6-4ec8-8c3d-81e95d80289f", "days_reduced": 0.5 },
+          { "profession_id": "efad754f-1a76-45ce-9711-92f974be4d6a", "days_reduced": 1 }
+        ],
+        "unlocks": [
+          {
+            "feature": "Decorative Stone Carvings",
+            "required_professions": [
+              "b5c7fabf-6ee6-4ec8-8c3d-81e95d80289f",
+              "23331c9c-0bbf-4244-b800-4443ba8cc79c"
+            ],
+            "effect": "Small passive boost (e.g. +1% fortitude or local tax income)"
+          }
+        ]
+      },
+      {
+        "building_blueprint_id": 1,
+        "stage_number": 2,
+        "name": "Watchtower Walls",
+        "description": "Watchtower walls made of stone and wood.",
+        "duration_days": 5,
+        "resource_costs": [
+          { "resource_id": "57cf8bd0-e6c6-47e1-98b0-1e4c46decd04", "amount": 200 },
+          { "resource_id": "e080d5d3-4985-4bd7-b7bf-9e676beebd42", "amount": 100 }
+        ],
+        "profession_time_bonus": [
+          { "profession_id": "b5c7fabf-6ee6-4ec8-8c3d-81e95d80289f", "days_reduced": 0.5 },
+          { "profession_id": "efad754f-1a76-45ce-9711-92f974be4d6a", "days_reduced": 1 }
+        ],
+        "unlocks": [
+          {
+            "feature": "Arrow Slits",
+            "required_professions": ["b5c7fabf-6ee6-4ec8-8c3d-81e95d80289f"],
+            "effect": "+10% ranged damage from the tower, +5% cover bonus"
+          },
+          {
+            "feature": "Machicolations",
+            "required_professions": [
+              "b5c7fabf-6ee6-4ec8-8c3d-81e95d80289f",
+              "efad754f-1a76-45ce-9711-92f974be4d6a"
+            ],
+            "effect": "Chance to stun enemies at the tower base when they try to scale the walls"
+          },
+          {
+            "feature": "Wooden Hoardings",
+            "required_professions": ["efad754f-1a76-45ce-9711-92f974be4d6a"],
+            "effect": "+5 m sight range for one stage of construction (temporary)"
+          }
+        ]
+      },
+      {
+        "building_blueprint_id": 1,
+        "stage_number": 3,
+        "name": "Watchtower Roof",
+        "description": "Watchtower roof made of wood.",
+        "duration_days": 2,
+        "resource_costs": [
+          { "resource_id": "57cf8bd0-e6c6-47e1-98b0-1e4c46decd04", "amount": 50 },
+          { "resource_id": "e080d5d3-4985-4bd7-b7bf-9e676beebd42", "amount": 25 }
+        ],
+        "profession_time_bonus": [
+          { "profession_id": "b5c7fabf-6ee6-4ec8-8c3d-81e95d80289f", "days_reduced": 0.5 },
+          { "profession_id": "efad754f-1a76-45ce-9711-92f974be4d6a", "days_reduced": 1 }
+        ],
+        "unlocks": [
+          {
+            "feature": "Signal Brazier",
+            "required_professions": [
+              "efad754f-1a76-45ce-9711-92f974be4d6a",
+              "972eb6da-ec9a-489d-9f89-0c0e4ba66f17"
+            ],
+            "effect": "Once per day, send a “call for reinforcements” that reduces nearby enemy spawns"
+          },
+          {
+            "feature": "Magic Lantern",
+            "required_professions": [
+              "eda74da3-440f-4a04-8f63-5bf6e3919275",
+              "7b14a825-617e-4119-8256-c444e4d0b2e5"
+            ],
+            "effect": "+20 m night vision radius and spot hidden enemies or treasures"
+          },
+          {
+            "feature": "Bell Tower / Signal Bell",
+            "required_professions": [
+              "efad754f-1a76-45ce-9711-92f974be4d6a",
+              "20c367cb-36e8-4afc-a14d-84c5d879f362"
+            ],
+            "effect": "Alert your own NPC guards in a wider radius when enemies are spotted"
+          },
+          {
+            "feature": "Banner Hanger & Standard Pole",
+            "required_professions": [
+              "efad754f-1a76-45ce-9711-92f974be4d6a",
+              "8dfcd168-32d4-4a97-8da3-4e79bad00603"
+            ],
+            "effect": "+5% morale bonus to garrisoned units within range"
+          },
+          {
+            "feature": "Trapdoor & Hidden Compartment",
+            "required_professions": [
+              "efad754f-1a76-45ce-9711-92f974be4d6a",
+              "fae16f90-0090-4fcc-9093-b56bc719bf95",
+              "7b14a825-617e-4119-8256-c444e4d0b2e5"
+            ],
+            "effect": "Once per siege, evacuate key NPCs or retrieve a hidden cache"
+          }
+        ]
+      }
+    ]
+  }
+  

@@ -140,3 +140,24 @@ class CharacterService:
             logging.warning(f"Character ID: {character_id} not found for deletion.")
         return deleted
 
+    async def add_resources(self, character_id: UUID, resources: dict) -> bool:
+        """
+        Adds resources to a character.
+
+        Args:
+            character_id: The ID of the character to update.
+            resources: A dictionary of resources to add.
+
+        Returns:
+            True if the operation was successful, False otherwise.
+        """
+        logging.info(f"Adding resources to character ID: {character_id}")
+
+        # This method should be implemented in the repository or service layer
+        # depending on how you manage resources in your game state.
+        success = await self.character_repository.add_resources(character_id, resources)
+        if success:
+            logging.info(f"Successfully added resources to character ID: {character_id}")
+        else:
+            logging.warning(f"Failed to add resources to character ID: {character_id}")
+        return success

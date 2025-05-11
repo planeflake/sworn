@@ -16,6 +16,12 @@ class ProfessionRepository(BaseRepository[ProfessionDefinitionEntity, Profession
     Inherits standard CRUD and conversion logic from BaseRepository.
     """
     def __init__(self, db: AsyncSession):
+        actual_model_cls = ProfessionDefinition # Or however you pass it if not hardcoded
+        logging.info(
+            f"ProfessionRepository initializing. Expected model: ProfessionDefinition, "
+            f"Actual model passed to BaseRepository: {actual_model_cls.__name__}, "
+            f"Table name: {actual_model_cls.__tablename__}"
+        )
         super().__init__(db=db, model_cls=ProfessionDefinition, entity_cls=ProfessionDefinitionEntity)
         logging.info("ProfessionRepository initialized.")
 

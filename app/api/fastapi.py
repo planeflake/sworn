@@ -12,6 +12,8 @@ from app.api.routes.character_routes import router as character_router
 from app.api.routes.resource_routes import router as resource_router
 from app.api.routes.profession_routes import router as profession_router
 from app.api.routes.skill_definition_routes import router as skill_definition_router
+from app.api.routes.building_instance_routes import router as building_instance_router
+
 #from app.api.routes.building_routes import router as building_router
 #from app.api.routes.item_routes import router as item_router
 
@@ -46,9 +48,10 @@ fastapi.include_router(world_router,      prefix="/api/v1", tags=["world"])
 fastapi.include_router(theme_router,      prefix="/api/v1", tags=["theme"])
 fastapi.include_router(settlement_router, prefix="/api/v1", tags=["settlement"])
 fastapi.include_router(character_router,  prefix="/api/v1", tags=["character"])
-fastapi.include_router(resource_router,   prefix="/api/v1", tags=["resource"])
-fastapi.include_router(profession_router, prefix="/api/v1", tags=["profession"])
-fastapi.include_router(skill_definition_router, prefix="/api/v1", tags=["skill"])
+fastapi.include_router(resource_router,   prefix="/api/v1/resources", tags=["resource"])
+fastapi.include_router(profession_router, prefix="/api/v1/professions", tags=["profession"])
+fastapi.include_router(skill_definition_router, prefix="/api/v1/skills", tags=["skill"])
+fastapi.include_router(building_instance_router, prefix="/api/v1/buildings", tags=["buildings"])
 #app.include_router(building_router,   prefix="/api/v1", tags=["building"])
 #app.include_router(item_router,       prefix="/api/v1", tags=["item"])
 

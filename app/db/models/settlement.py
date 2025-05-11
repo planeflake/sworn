@@ -55,6 +55,12 @@ class Settlement(Base):
         default=lambda: {}
     )
 
+    leader_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        pgUUID(as_uuid=True),
+        ForeignKey("characters.id"),
+        nullable=True
+    )
+
     # --- Timestamps (Already excluded from __init__) ---
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

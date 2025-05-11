@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any
 
 from sqlalchemy import (
-    Integer, String, Text, Boolean, DateTime,
+    Integer, String, Text, Boolean, DateTime, Float,
     ForeignKey, UniqueConstraint, Index, func, text
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -45,6 +45,32 @@ class BuildingBlueprint(Base):
         "Theme",
         back_populates="building_blueprints", # Matches relationship in Theme model
         lazy="selectin",
+    )
+
+    # --- New static stat columns ---
+    defense: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0",
+        comment="Flat defense/security rating provided by this blueprint"
+    )
+    visibility_range: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0",
+        comment="Sight range bonus (meters) from this building"
+    )
+    garrison_capacity: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0",
+        comment="How many troops can garrison here"
+    )
+    alert_efficiency: Mapped[Float] = mapped_column(
+        Float, nullable=False, default=0.0, server_default="0",
+        comment="Multiplier or percent bonus to alarm radius/speed"
+    )
+    morale_bonus: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0",
+        comment="Flat morale bonus to nearby units"
+    )
+    attractiveness: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0, server_default="0",
+        comment="Boost to settlement attractiveness (trade/tax income)"
     )
 
     # --- Relationship to Stages ---

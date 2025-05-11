@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from .location import Location
     from .skill import Skill
     # from .player_account import PlayerAccount # If you create this model
+    from .building_instance import BuildingInstanceDB # <<< ADD THIS IMPORT
 
 # --- Association Table for Character <-> Skill (Many-to-Many) ---
 # This needs to be defined where both Character and Skill can see it,
@@ -87,6 +88,22 @@ class Character(Base):
        index=True
     )
 
+    # --- BUILDING ASSIGNMENT FOREIGN KEYS ---
+    current_building_home_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        pgUUID(as_uuid=True),
+        ForeignKey("building_instances.id", name="fk_char_home_building_id", ondelete="SET NULL"),
+        nullable=True,
+        index=True
+    )
+    current_building_workplace_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        pgUUID(as_uuid=True),
+        ForeignKey("building_instances.id", name="fk_char_work_building_id", ondelete="SET NULL"),
+        nullable=True,
+        index=True
+    )
+    # --- END BUILDING ASSIGNMENT FOREIGN KEYS ---
+
+
     # --- Relationships ---
     items: Mapped[List["Item"]] = relationship(
         "Item",
@@ -99,7 +116,7 @@ class Character(Base):
     current_location: Mapped[Optional["Location"]] = relationship(
        "Location",
        foreign_keys=[current_location_id],
-       back_populates="characters_at_location",
+       back_populates="characters_at_location", # Ensure Location model has 'characters_at_location'
        lazy="selectin"
     )
 
@@ -116,6 +133,21 @@ class Character(Base):
     #     foreign_keys=[player_account_id],
     #     back_populates="character" # Assumes PlayerAccount has 'character' relationship
     # )
+
+    # --- BUILDING ASSIGNMENT RELATIONSHIPS ---
+    home_building: Mapped[Optional["BuildingInstanceDB"]] = relationship(
+        "BuildingInstanceDB",
+        foreign_keys=[current_building_home_id],
+        back_populates="residents", # This name needs to exist in BuildingInstanceDB
+        lazy="selectin"
+    )
+    work_building: Mapped[Optional["BuildingInstanceDB"]] = relationship(
+        "BuildingInstanceDB",
+        foreign_keys=[current_building_workplace_id],
+        back_populates="workers", # This name needs to exist in BuildingInstanceDB
+        lazy="selectin"
+    )
+    # --- END BUILDING ASSIGNMENT RELATIONSHIPS ---
 
     def __repr__(self) -> str:
         return f"<Character(id={self.id!r}, name={self.name!r}, type={self.character_type.name})>"

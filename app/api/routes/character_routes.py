@@ -163,3 +163,30 @@ async def create_Character(
         # Log the exception for debugging
         logging.exception(f"Error creating Character: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+    
+@router.post("/Characters/{Character_id}/add_resources")
+async def add_resources_to_Character(
+        Character_id: UUID,
+        resources: list,
+        db: AsyncSession = Depends(get_async_db)
+    ):
+    """
+    Add resources to a Character by its ID.
+    
+    If the Character is not found, a 404 error will be raised.
+    """
+    try:
+        Character_service = CharacterService(db=db)
+        Character = await Character_service.get_by_id(Character_id=Character_id)
+        
+        if not Character:
+            raise HTTPException(status_code=404, detail="Character not found.")
+        
+        # Add resources to the Character
+        await Character_service.add_resources(Character_id=Character_id, resources=resources)
+        
+        return {"message": "Resources added successfully."}
+    except Exception as e:
+        # Log the exception for debugging
+        logging.exception(f"Error adding resources to Character: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
