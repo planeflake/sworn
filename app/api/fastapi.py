@@ -14,6 +14,7 @@ from app.api.routes.profession_routes import router as profession_router
 from app.api.routes.skill_definition_routes import router as skill_definition_router
 from app.api.routes.building_instance_routes import router as building_instance_router
 from app.api.routes.building_blueprint_routes import router as building_blueprint_router
+from app.api.routes.building_upgrade_blueprint_routes import router as building_upgrade_blueprint_router
 
 #from app.api.routes.building_routes import router as building_router
 #from app.api.routes.item_routes import router as item_router
@@ -54,6 +55,7 @@ fastapi.include_router(profession_router, prefix="/api/v1/professions", tags=["P
 fastapi.include_router(skill_definition_router, prefix="/api/v1/skills", tags=["Skill"])
 fastapi.include_router(building_instance_router, prefix="/api/v1/buildings", tags=["Buildings"])
 fastapi.include_router(building_blueprint_router, prefix="/api/v1/building-blueprints", tags=["Building Blueprints"])
+fastapi.include_router(building_upgrade_blueprint_router, prefix="/api/v1/building-upgrade-blueprints", tags=["Building Upgrade Blueprints"])
 #app.include_router(building_router,   prefix="/api/v1", tags=["building"])
 #app.include_router(item_router,       prefix="/api/v1", tags=["item"])
 

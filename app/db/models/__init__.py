@@ -19,3 +19,5 @@ from .item import Item
 from .skill import Skill
 from .location import Location
 from .skill_definition import SkillDefinition
+from .building_upgrade_blueprint import BuildingUpgradeBlueprint
+from .building_instance import BuildingInstanceDB

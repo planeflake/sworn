@@ -8,6 +8,8 @@ import dataclasses # Added dataclasses
 # Import Repository, Domain Entity (and potentially an API Model for Theme)
 from app.game_state.repositories.theme_repository import ThemeRepository
 from app.game_state.entities.theme import Theme as ThemeEntity
+from app.api.schemas.shared import PaginatedResponse # Import the PaginatedResponse schema
+from app.api.schemas.theme_schema import ThemeRead # Import the API schema for read operations
 # from app.game_state.models.theme import ThemeApiModel # Define if needed for API consistency
 
 class ThemeService:
@@ -17,6 +19,45 @@ class ThemeService:
         # Correctly instantiate the repository
         self.repository = ThemeRepository(db=self.db)
         logging.debug("ThemeService initialized with ThemeRepository.")
+
+    async def _convert_entity_to_read_schema(self, entity: Optional[ThemeEntity]) -> Optional[ThemeRead]:
+            if entity is None: return None
+            try:
+                entity_dict = dataclasses.asdict(entity)
+                if 'entity_id' in entity_dict and 'id' not in entity_dict:
+                    entity_dict['id'] = entity_dict.pop('entity_id')
+                return ThemeRead.model_validate(entity_dict)
+            except Exception as e:
+                logging.error(f"Failed to convert ThemeEntity to Read schema: {e}", exc_info=True)
+                raise ValueError("Internal error converting theme data.")
+
+    async def get_all_themes_paginated(self, skip: int, limit: int) -> PaginatedResponse[ThemeRead]: # Return the Pydantic model
+        """
+        Retrieves a paginated list of themes.
+        """
+        # Call the repository's paginated find method
+        # Pass any conditions or order_by if needed by this specific service method
+        paginated_repo_result = await self.repository.find_all_paginated(
+            skip=skip,
+            limit=limit
+            # conditions=[self.repository.model_cls.is_active == True], # Example filter
+            # order_by=[self.repository.model_cls.name.asc()]           # Example order
+        )
+
+        # Convert domain entities in "items" to read schemas
+        read_schema_items = []
+        for entity in paginated_repo_result["items"]:
+            schema = await self._convert_entity_to_read_schema(entity)
+            if schema:
+                read_schema_items.append(schema)
+        
+        # Construct and return the PaginatedResponse Pydantic model
+        return PaginatedResponse[ThemeRead](
+            items=read_schema_items,
+            total=paginated_repo_result["total"],
+            limit=paginated_repo_result["limit"],
+            skip=paginated_repo_result["skip"],
+        )
 
     async def exists(self, theme_id: UUID) -> bool:
         """Check if a theme exists by ID."""

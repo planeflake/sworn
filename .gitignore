@@ -6980,3 +6980,6 @@ rpg_idle_game.egg-info/requires.txt
 rpg_idle_game.egg-info/SOURCES.txt
 rpg_idle_game.egg-info/top_level.txt
 /venv
+mcp/claude_api_mcp.py
+mcp/start_mcp.py
+mcp/integration_test.py

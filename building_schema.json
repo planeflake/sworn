@@ -1,5 +1,5 @@
 {
-    "name": "Watchtower",
+    "name": "Simple Wooden Watchtower",
     "description": "A small tower that can be used to spot enemies from a distance.",
     "theme_id": "dfba10ac-eaa7-4f83-977d-def25746dfb5",
     "stages": [
@@ -24,7 +24,7 @@
               "b5c7fabf-6ee6-4ec8-8c3d-81e95d80289f",
               "23331c9c-0bbf-4244-b800-4443ba8cc79c"
             ],
-            "effect": "Small passive boost (e.g. +1% fortitude or local tax income)"
+            "effect": "Attractiveness bonus to the building, +5% morale bonus to garrisoned units"
           }
         ]
       },
@@ -54,12 +54,12 @@
               "b5c7fabf-6ee6-4ec8-8c3d-81e95d80289f",
               "efad754f-1a76-45ce-9711-92f974be4d6a"
             ],
-            "effect": "Chance to stun enemies at the tower base when they try to scale the walls"
+            "effect": "+15 defense bonus to the tower"
           },
           {
             "feature": "Wooden Hoardings",
             "required_professions": ["efad754f-1a76-45ce-9711-92f974be4d6a"],
-            "effect": "+5 m sight range for one stage of construction (temporary)"
+            "effect": "+5 visibility range for one stage of construction (temporary)"
           }
         ]
       },
@@ -85,6 +85,14 @@
               "972eb6da-ec9a-489d-9f89-0c0e4ba66f17"
             ],
             "effect": "Once per day, send a “call for reinforcements” that reduces nearby enemy spawns"
+          },
+          {
+            "feature": "Watchtower Bell",
+            "required_professions": [
+              "efad754f-1a76-45ce-9711-92f974be4d6a",
+              "7b14a825-617e-4119-8256-c444e4d0b2e5"
+            ],
+            "effect": "Once per day, alert nearby NPCs to enemy presence, reducing their spawn rate"
           },
           {
             "feature": "Magic Lantern",

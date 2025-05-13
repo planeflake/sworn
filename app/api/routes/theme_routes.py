@@ -21,7 +21,7 @@ class ThemeOutputResponse(BaseModel):
 
 router = APIRouter()
 
-@router.post("/Themes", response_model=ThemeCreatedResponse)
+@router.post("/", response_model=ThemeCreatedResponse)
 async def create_Theme(
         theme_id: Optional[str] = Body(default=None),
         theme_name: Optional[str] = Body(default=None),
@@ -60,7 +60,31 @@ async def create_Theme(
         # Log the exception for debugging
         logging.exception(f"Error creating Theme: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+
+@router.get("/", response_model=ThemeOutputResponse)
+async def list_Themes(
+        skip: int = 0,
+        limit: int = 100,
+        db: AsyncSession = Depends(get_async_db)
+    ):
+    """
+    List all Themes with pagination.
     
+    Returns a list of Themes with a message.
+    """
+    try:
+        theme_service = ThemeService(db=db)
+        themes = await theme_service.get_all_themes(skip=skip, limit=limit)
+        
+        return ThemeOutputResponse(
+            theme=themes, 
+            message="Themes retrieved successfully"
+        )
+    except Exception as e:
+        # Log the exception for debugging
+        logging.exception(f"Error retrieving Themes: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+
 @router.get("/{theme_id}", response_model=ThemeOutputResponse)
 async def get_Theme(
         theme_id: str,
