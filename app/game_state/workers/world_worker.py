@@ -6,68 +6,21 @@ import uuid
 from redis.exceptions import LockError
 
 from app.core.celery_app import app
-from app.core.redis import create_task_lock
-from app.db.async_session import get_db_session, get_session
+from app.db.async_session import get_session
 from app.game_state.services.world_service import WorldService
+from app.game_state.workers.worker_utils import with_task_lock, run_async_task
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 @app.task
-def advance_game_day(world_id=None):
+@with_task_lock(task_name="advance_game_day", timeout=3660)
+def advance_game_day(world_id=None, task_id=None):
     """Task entry point - uses a persistent event loop for the worker"""
     print("TASK: advance_game_day - STARTED")
     
-    # Generate a task ID for logging
-    task_id = str(uuid.uuid4())
-    
-    # Get a lock using the helper function from our centralized Redis module
-    lock = create_task_lock(
-        task_name="advance_game_day",
-        resource_id=world_id,
-        timeout=3660
-    )
-    
-    have_lock = False
-    
-    try:
-        # Try to acquire lock - non-blocking to prevent queue buildup
-        have_lock = lock.acquire(blocking=False)
-        
-        if not have_lock:
-            print(f"Task {task_id}: Lock already held for world: {world_id or 'ALL'}, skipping execution")
-            return {
-                "success": False, 
-                "skipped": True, 
-                "reason": "Another task is already processing this world"
-            }
-            
-        print(f"Task {task_id}: Acquired lock for world: {world_id or 'ALL'}, proceeding with execution")
-        
-        # Get or create an event loop - don't close it after use
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            # No event loop in current thread, create a new one
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            print(f"Task {task_id}: Created new event loop")
-        
-        # Run the async implementation
-        return loop.run_until_complete(_advance_game_day_async(world_id, task_id))
-        
-    except Exception as e:
-        logger.exception(f"Task {task_id}: Error in advance_game_day: {str(e)}")
-        return {"success": False, "error": str(e)}
-    finally:
-        # Always release the lock if we have it, even if an exception occurred
-        if have_lock:
-            try:
-                lock.release()
-                print(f"Task {task_id}: Released lock for world: {world_id or 'ALL'}")
-            except LockError:
-                # Lock might have expired
-                logger.warning(f"Task {task_id}: Failed to release lock - it may have expired")
+    # Run the async implementation using the utility function
+    return run_async_task(_advance_game_day_async, world_id, task_id)
 
 async def _advance_game_day_async(world_id=None, task_id=None) -> Dict[str, Any]:
     """Async implementation of the task"""

@@ -1,0 +1,154 @@
+[
+    {
+        "biome_id": "plains",
+        "name": "Plains",
+        "display_name": "Plains",
+        "description": "Open grasslands with easy travel.",
+        "base_movement_modifier": 1.0,
+        "danger_level_base": 1,
+        "resource_types": {
+            "food": 1.2,
+            "wood": 0.5,
+            "herbs": 1.0
+        },
+        "color_hex": "#90EE90"
+    },
+    {
+        "biome_id": "forest",
+        "name": "Forest",
+        "display_name": "Forest",
+        "description": "Dense woodland with moderate visibility.",
+        "base_movement_modifier": 0.8,
+        "danger_level_base": 2,
+        "resource_types": {
+            "food": 1.0,
+            "wood": 1.5,
+            "herbs": 1.3
+        },
+        "color_hex": "#228B22"
+    },
+    {
+        "biome_id": "mountains",
+        "name": "Mountains",
+        "display_name": "Mountains",
+        "description": "Rugged, elevated terrain with difficult passage.",
+        "base_movement_modifier": 0.5,
+        "danger_level_base": 3,
+        "resource_types": {
+            "ore": 1.5,
+            "herbs": 0.8,
+            "stone": 1.4
+        },
+        "color_hex": "#A9A9A9"
+    },
+    {
+        "biome_id": "hills",
+        "name": "Hills",
+        "display_name": "Hills",
+        "description": "Rolling terrain with good visibility.",
+        "base_movement_modifier": 0.7,
+        "danger_level_base": 2,
+        "resource_types": {
+            "ore": 1.0,
+            "food": 0.8,
+            "stone": 1.2
+        },
+        "color_hex": "#D2B48C"
+    },
+    {
+        "biome_id": "swamp",
+        "name": "Swamp",
+        "display_name": "Swamp",
+        "description": "Wet, boggy ground that slows travel significantly.",
+        "base_movement_modifier": 0.4,
+        "danger_level_base": 4,
+        "resource_types": {
+            "food": 0.7,
+            "wood": 0.9,
+            "herbs": 1.4
+        },
+        "color_hex": "#2F4F4F"
+    },
+    {
+        "biome_id": "desert",
+        "name": "Desert",
+        "display_name": "Desert",
+        "description": "Arid region with extreme temperatures.",
+        "base_movement_modifier": 0.6,
+        "danger_level_base": 3,
+        "resource_types": {
+            "ore": 0.9,
+            "gems": 1.2,
+            "stone": 1.1
+        },
+        "color_hex": "#F4A460"
+    },
+    {
+        "biome_id": "coast",
+        "name": "Coastal",
+        "display_name": "Coastal",
+        "description": "Land adjacent to water bodies.",
+        "base_movement_modifier": 0.9,
+        "danger_level_base": 1,
+        "resource_types": {
+            "food": 1.4,
+            "salt": 1.5,
+            "herbs": 0.8
+        },
+        "color_hex": "#87CEEB"
+    },
+    {
+        "biome_id": "river",
+        "name": "River",
+        "display_name": "River",
+        "description": "Flowing waterway suitable for boat travel.",
+        "base_movement_modifier": 0.5,
+        "danger_level_base": 1,
+        "resource_types": {
+            "food": 1.3,
+            "water": 1.5
+        },
+        "color_hex": "#1E90FF"
+    },
+    {
+        "biome_id": "lake",
+        "name": "Lake",
+        "display_name": "Lake",
+        "description": "Large body of water suitable for boat travel.",
+        "base_movement_modifier": 0.4,
+        "danger_level_base": 1,
+        "resource_types": {
+            "food": 1.4,
+            "water": 1.5
+        },
+        "color_hex": "#4169E1"
+    },
+    {
+        "biome_id": "tundra",
+        "name": "Tundra",
+        "display_name": "Tundra",
+        "description": "Cold, treeless plain with frozen subsoil.",
+        "base_movement_modifier": 0.7,
+        "danger_level_base": 3,
+        "resource_types": {
+            "food": 0.6,
+            "furs": 1.3,
+            "herbs": 0.7
+        },
+        "color_hex": "#F0F8FF"
+    },
+    {
+        "biome_id": "jungle",
+        "name": "Jungle",
+        "display_name": "Jungle",
+        "description": "Dense tropical forest with difficult passage.",
+        "base_movement_modifier": 0.4,
+        "danger_level_base": 4,
+        "resource_types": {
+            "food": 1.2,
+            "wood": 1.3,
+            "exotic_herbs": 1.6
+        },
+        "color_hex": "#006400"
+    }
+]

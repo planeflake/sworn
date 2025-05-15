@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
 import fastapi_swagger_dark as fsd
 
@@ -15,14 +14,10 @@ from app.api.routes.skill_definition_routes import router as skill_definition_ro
 from app.api.routes.building_instance_routes import router as building_instance_router
 from app.api.routes.building_blueprint_routes import router as building_blueprint_router
 from app.api.routes.building_upgrade_blueprint_routes import router as building_upgrade_blueprint_router
+from app.api.routes.biome_routes import router as biome_router
 
 #from app.api.routes.building_routes import router as building_router
 #from app.api.routes.item_routes import router as item_router
-
-# Dark-mode CSS for Swagger UI (CDN or local)
-#swagger_ui_params = {
-#    "customCssUrl": "https://cdn.jsdelivr.net/gh/Amoenus/SwaggerDark@main/swagger-dark.css"
-#}
 
 fastapi = FastAPI(
     docs_url=None,  # Disable default docs URL|
@@ -56,6 +51,7 @@ fastapi.include_router(skill_definition_router, prefix="/api/v1/skills", tags=["
 fastapi.include_router(building_instance_router, prefix="/api/v1/buildings", tags=["Buildings"])
 fastapi.include_router(building_blueprint_router, prefix="/api/v1/building-blueprints", tags=["Building Blueprints"])
 fastapi.include_router(building_upgrade_blueprint_router, prefix="/api/v1/building-upgrade-blueprints", tags=["Building Upgrade Blueprints"])
+fastapi.include_router(biome_router, prefix="/api/v1/biomes", tags=["Biomes"])
 #app.include_router(building_router,   prefix="/api/v1", tags=["building"])
 #app.include_router(item_router,       prefix="/api/v1", tags=["item"])
 

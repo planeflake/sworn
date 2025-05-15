@@ -1,75 +1,56 @@
-# --- START OF FILE app/game_state/entities/_template_entity.py ---
-# Rename this file to match your specific entity (e.g., building_entity.py, item_entity.py)
+# --- START OF FILE app/game_state/entities/skill.py ---
 
-# --- Core Python Imports ---
 import uuid
 import enum
-from datetime import datetime, date, time # Import date/time types as needed
-from typing import Optional, List, Dict, Any # For Python type hinting
-from dataclasses import dataclass, field    # Core dataclass tools
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from typing import Optional, List, Dict, Any
 
-# --- Import Domain Enums & Other Domain Entities ---
-# Define or import Enums relevant to this domain entity
-# from app.game_state.enums import ExampleStatusEnum # Example import
-class ExampleStatusEnum(enum.Enum): # Placeholder definition
-    ACTIVE = "ACTIVE"
-    INACTIVE = "INACTIVE"
+from .base import BaseEntity
 
-# Define or import other domain entities this entity might contain/reference
-# Use relative imports if they are in the same 'entities' folder
-# from .related_entity import RelatedEntity # Example import
+# Define skill-specific enum
+class SkillStatus(enum.Enum):
+    LOCKED = "LOCKED"
+    AVAILABLE = "AVAILABLE"
+    LEARNING = "LEARNING"
+    MASTERED = "MASTERED"
+
 @dataclass
-class RelatedEntity: # Placeholder definition
-    entity_id: uuid.UUID = field(default_factory=uuid.uuid4)
-    name: str = "Related"
-
-# --- Base Entity (Optional but Recommended) ---
-# Assume you have a base domain entity like this defined in entities/base.py:
-# @dataclass
-# class BaseEntity:
-#     entity_id: uuid.UUID = field(default_factory=uuid.uuid4)
-#     name: str = "Unnamed Entity"
-# If using a base entity, import and inherit from it:
-from .base import BaseEntity # Assuming entities/base.py exists
-
-# --- Entity Definition ---
-# Rename 'TemplateEntity' and adjust inheritance if needed
-@dataclass
-class SkillEntity(BaseEntity):  # Inherit from your domain BaseEntity if applicable
+class SkillEntity(BaseEntity):
     """
-    Skill TEMPLATE (@dataclass).
-    Represents the internal state and data for core game logic.
+    Domain Entity representing a character skill.
+    Inherits entity_id and name from BaseEntity.
     """
-    # --- Required Fields (Specific to this Entity) ---
-    level: str  # Example: must be provided on creation
-
-    # --- Optional Basic Types ---
+    # Skill attributes
+    level: int = 0
+    max_level: int = 100
+    experience: int = 0
+    experience_to_next_level: int = 100
+    status: SkillStatus = SkillStatus.LOCKED
+    
+    # Description and metadata
     description: Optional[str] = None
-    count: Optional[int] = None
-    value: Optional[float] = None
-    is_important: bool = False  # Example with a simple default
-
-    # --- Domain Enum ---
-    status: ExampleStatusEnum = ExampleStatusEnum.ACTIVE  # Default value
-
-    # --- Date/Time Fields ---
-    event_timestamp: Optional[datetime] = None
-    start_date: Optional[date] = None
-
-    # --- Complex Types (Dictionaries, Lists of Primitives, Lists of Entities) ---
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    tags: List[str] = field(default_factory=list)
-    related_entities: List[RelatedEntity] = field(default_factory=list)  # List of other domain entities
-
-    # --- Links to other Entities (by ID) ---
-    related_entity_id: Optional[uuid.UUID] = None
-
-    # --- Timestamps (Usually Optional in Domain, set by Repo/DB) ---
-    created_at: Optional[datetime] = None
+    category: Optional[str] = None
+    icon_path: Optional[str] = None
+    
+    # Timestamps
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
+    unlocked_at: Optional[datetime] = None
+    
+    # Additional metadata
+    tags: List[str] = field(default_factory=list)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    
+    # Relationships
+    prerequisite_skill_ids: List[uuid.UUID] = field(default_factory=list)
+    
+    def __post_init__(self):
+        """Initialize fields as needed."""
+        if self.updated_at is None:
+            self.updated_at = self.created_at
+            
+        if self.status != SkillStatus.LOCKED and self.unlocked_at is None:
+            self.unlocked_at = self.created_at
 
-    # --- Override BaseEntity Fields ---
-    entity_id: uuid.UUID = field(default_factory=uuid.uuid4, init=False)
-    name: str = field(default="Unnamed Entity", init=False)
-
-# --- END OF FILE app/game_state/entities/_template_entity.py ---
+# --- END OF FILE app/game_state/entities/skill.py ---

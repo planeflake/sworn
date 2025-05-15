@@ -30,7 +30,7 @@ class CharacterCreate(BaseModel):
     """Request model for creating a Character"""
     world_id: UUID
     name: str = None
-    character_type: str = None
+    character_type: CharacterTypeEnum = None
     description: Optional[str] = None
 
     class Config:
@@ -48,7 +48,7 @@ class CharacterCreatedResponse(BaseModel):
     Character: CharacterRead
     message: str
 
-    class config:
+    class Config:
         from_attributes = True
 
         json_schema_extra = {

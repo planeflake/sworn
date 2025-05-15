@@ -1,39 +1,44 @@
-# START OF FILE app/game_state/entities/settlement.py
-
-from .base import BaseEntity
-# Import KW_ONLY and field
-from dataclasses import dataclass, field, KW_ONLY
-from uuid import UUID, uuid4
-from typing import Optional, List
+# settlement.py
+from dataclasses import dataclass, field
+from uuid import UUID
+from typing import Optional, List, Any, Dict
 from datetime import datetime
+# Import the base entity
+from app.game_state.entities.base import BaseEntity
 
 @dataclass
-class Settlement(BaseEntity):
+class SettlementEntity(BaseEntity):
     """
     Represents a Settlement in the game (Domain Entity).
-    Uses KW_ONLY to separate non-default positional args from others.
+    Inherits entity_id and name as fields from BaseEntity.
     """
-    # --- Positional, Non-default fields FIRST ---
-    # This will be the only required positional argument
-    world_id: UUID
-
-    # --- Positional fields with defaults NEXT ---
-    # These can still be positional, but have defaults
+    # --- Fields with defaults ---
+    world_id: UUID = None
+    leader_id: Optional[UUID] = None
     description: Optional[str] = None
     buildings: List[str] = field(default_factory=list)
     resources: List[str] = field(default_factory=list)
+    population: int = 0
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-    # --- Keyword-Only Separator ---
-    # All fields defined *after* this MUST be specified by keyword
-    # when creating an instance (e.g., Settlement(world_id=..., entity_id=...))
-    _: KW_ONLY
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert SettlementEntity to a dictionary with safe serialization."""
+        # Manually create dictionary instead of using asdict to avoid inheritance issues
+        data = {
+            "id": str(self.entity_id),
+            "name": self.name,
+            "world_id": str(self.world_id) if self.world_id else None,
+            "leader_id": str(self.leader_id) if self.leader_id else None,
+            "description": self.description,
+            "buildings": self.buildings,
+            "resources": self.resources,
+            "population": self.population,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+        
+        return data
 
-    # --- Keyword-Only fields (inherited, re-declared with defaults) ---
-    # Marking these as keyword-only ensures they don't interfere
-    # with the positional argument order check.
-    entity_id: UUID = field(default_factory=uuid4)
-    name: str = "Unnamed Entity"
-
-# END OF FILE app/game_state/entities/settlement.py
+# For backward compatibility
+Settlement = SettlementEntity

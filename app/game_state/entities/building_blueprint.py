@@ -3,7 +3,7 @@
 import uuid
 from dataclasses import dataclass, field, KW_ONLY
 from datetime import datetime, timezone
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Set
 
 from .base import BaseEntity # Assuming app.game_state.entities.base.BaseEntity
 
@@ -69,5 +69,104 @@ class BuildingBlueprintEntity(BaseEntity): # Inherits entity_id, name
         # Sort stages by stage_number if they are provided out of order
         if self.stages:
             self.stages.sort(key=lambda s: s.stage_number)
+            
+        # Initialize metadata if needed
+        if self.metadata_ is None:
+            self.metadata_ = {}
+            
+        # Ensure attributes list exists in metadata
+        if 'attributes' not in self.metadata_:
+            self.metadata_['attributes'] = []
+            
+    def get_attributes(self) -> List[str]:
+        """
+        Get the building's attributes from metadata.
+        Returns a list of attribute string values.
+        """
+        if not self.metadata_ or 'attributes' not in self.metadata_:
+            return []
+        return self.metadata_.get('attributes', [])
+    
+    def has_attribute(self, attribute_value: str) -> bool:
+        """
+        Check if the building has a specific attribute.
+        
+        Args:
+            attribute_value: The attribute value to check
+            
+        Returns:
+            True if the building has the attribute, False otherwise
+        """
+        attributes = self.get_attributes()
+        return attribute_value in attributes
+        
+    def add_attribute(self, attribute_value: str) -> None:
+        """
+        Add an attribute to the building's metadata.
+        
+        Args:
+            attribute_value: The attribute value to add
+        """
+        if self.metadata_ is None:
+            self.metadata_ = {}
+            
+        if 'attributes' not in self.metadata_:
+            self.metadata_['attributes'] = []
+            
+        if attribute_value not in self.metadata_['attributes']:
+            self.metadata_['attributes'].append(attribute_value)
+            
+    def remove_attribute(self, attribute_value: str) -> None:
+        """
+        Remove an attribute from the building's metadata.
+        
+        Args:
+            attribute_value: The attribute value to remove
+        """
+        if not self.metadata_ or 'attributes' not in self.metadata_:
+            return
+            
+        if attribute_value in self.metadata_['attributes']:
+            self.metadata_['attributes'].remove(attribute_value)
+            
+    def get_primary_category(self) -> Optional[str]:
+        """
+        Get the primary category of the building.
+        
+        Returns:
+            The primary category string or None if not set
+        """
+        if not self.metadata_ or 'category' not in self.metadata_:
+            return None
+        return self.metadata_['category']
+        
+    def set_primary_category(self, category: str) -> None:
+        """
+        Set the primary category of the building.
+        
+        Args:
+            category: The category string to set
+        """
+        if self.metadata_ is None:
+            self.metadata_ = {}
+            
+        self.metadata_['category'] = category
+        self.add_attribute(category)  # Ensure category is also in attributes
+        
+    def calculate_trait_affinity(self, trait: str) -> float:
+        """
+        Calculate affinity score between building attributes and a character trait.
+        
+        Args:
+            trait: The character trait string
+            
+        Returns:
+            Float between 0.0 and 1.0 representing affinity score
+        """
+        # Import here to avoid circular imports
+        from app.game_state.enums.building_attributes import calculate_trait_affinity
+        
+        building_attributes = self.get_attributes()
+        return calculate_trait_affinity(building_attributes, trait)
 
 # --- END OF FILE app/game_state/entities/building_blueprint.py ---

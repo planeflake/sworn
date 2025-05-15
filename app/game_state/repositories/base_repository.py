@@ -235,7 +235,6 @@ class BaseRepository(Generic[EntityType, ModelType, PrimaryKeyType]):
         return [entity for entity in entities if entity is not None]
 
     async def delete(self, entity_id: PrimaryKeyType) -> bool:
-        # ... (your existing delete code - looks good) ...
         if not self._pk_attr_names:
              raise ValueError(f"Cannot delete: Primary key not defined for model {self.model_cls.__name__}")
         logging.debug(f"[Delete] Attempting to delete {self.model_cls.__name__} with ID: {entity_id}")
@@ -255,7 +254,6 @@ class BaseRepository(Generic[EntityType, ModelType, PrimaryKeyType]):
             return False
 
     async def exists(self, entity_id: PrimaryKeyType) -> bool:
-        # ... (your existing exists code - looks good) ...
         if not self._pk_attr_names:
              raise ValueError(f"Cannot check existence: Primary key not defined for model {self.model_cls.__name__}")
         logging.debug(f"[Exists] Checking existence for {self.model_cls.__name__} with ID: {entity_id}")

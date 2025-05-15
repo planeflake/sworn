@@ -1,12 +1,12 @@
 # --- START OF FILE app/game_state/repositories/theme_repository.py ---
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select # Import select
+from sqlalchemy.future import select
 from uuid import UUID
-from typing import Optional # Import Optional
-import logging # Import logging
+from typing import Optional
+import logging
 
 from app.db.models.theme import Theme as ThemeModel # DB Model
-from app.game_state.entities.theme import Theme as ThemeEntity # Domain Entity
+from app.game_state.entities.theme import ThemeEntity # Domain Entity
 from app.game_state.repositories.base_repository import BaseRepository
 
 class ThemeRepository(BaseRepository[ThemeEntity, ThemeModel, UUID]):
@@ -15,7 +15,6 @@ class ThemeRepository(BaseRepository[ThemeEntity, ThemeModel, UUID]):
         # Pass the DB session, SQLAlchemy model, and Domain entity
         super().__init__(db=db, model_cls=ThemeModel, entity_cls=ThemeEntity)
         logging.info(f"ThemeRepository initialized with model {ThemeModel.__name__} and entity {ThemeEntity.__name__}")
-
 
     async def find_by_name(self, name: str) -> Optional[ThemeEntity]:
         """Finds a theme by its unique name."""

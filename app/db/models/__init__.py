@@ -21,3 +21,4 @@ from .location import Location
 from .skill_definition import SkillDefinition
 from .building_upgrade_blueprint import BuildingUpgradeBlueprint
 from .building_instance import BuildingInstanceDB
+from .biome import Biome

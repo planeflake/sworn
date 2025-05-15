@@ -1,103 +1,41 @@
-# --- START OF FILE app/game_state/entities/_template_entity.py ---
-# Rename this file, e.g., settlement_building.py, character.py, item.py
+# --- START OF FILE app/game_state/entities/equipment.py ---
 
-# --- Core Python Imports ---
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone # Use timezone-aware datetimes
-from typing import Optional, List, Dict, Any # For type hinting
-import enum                     # For defining status or type enums
+from datetime import datetime, timezone
+from typing import Optional, List, Dict, Any
 
-# --- Project Imports ---
-from .base import BaseEntity    # <<< Import the BaseEntity
-
-# --- Define Enums specific to this Entity (or import from a central enums file) ---
-
+from .base import BaseEntity
 from app.game_state.enums.shared import StatusEnum, RarityEnum
 
-# --- Domain Entity Definition ---
-# Rename 'DomainEntityTemplate' to your specific entity name (e.g., SettlementBuilding, GameItem)
 @dataclass
-class EquipmentEntity(BaseEntity): # <<< Inherit from BaseEntity
+class EquipmentEntity(BaseEntity):
     """
-    Template for a Domain Entity using Python dataclasses.
-    Inherits 'entity_id' and 'name' from BaseEntity.
-    Represents the state of a core concept within the game's domain logic layer.
-
-    NOTE: Inherited fields:
-     - entity_id: UUID (from BaseEntity)
-     - name: str (from BaseEntity, defaults to "Unnamed Entity")
+    Domain Entity representing Equipment in the game.
+    Inherits entity_id and name from BaseEntity.
     """
-
-    # --- Specific Attributes for this Entity ---
-    # id and name are inherited from BaseEntity - DO NOT REDEFINE HERE
-
-    # Integer attribute, e.g., quantity, level, count.
-    level: int = 1 # Example with a default value
-
-    # Optional longer text description (could override/supplement BaseEntity's name).
+    # Primary attributes
+    level: int = 1
     description: Optional[str] = None
-
-    # Floating point attribute, e.g., weight, modifier, progress (0.0-1.0).
     modifier: Optional[float] = None
-
-    rarity: RarityEnum = RarityEnum.COMMON # Example with a default value
-
-    # Boolean flag.
-    is_enabled: bool = True # Example with a default value
-
-    # --- Enum for State/Type ---
-    # Uses the Enum defined above. Default value is good practice.
+    rarity: RarityEnum = RarityEnum.COMMON
+    is_enabled: bool = True
     status: StatusEnum = StatusEnum.ACTIVE
-
-    # --- Date/Time Attributes ---
-    # created_at/updated_at might also be candidates for BaseEntity if ALL entities need them.
+    
+    # Timestamps
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
-
-    # --- Collections ---
+    
+    # Additional metadata
     tags: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
-
-    # --- Relationships (Represented by ID) ---
-    # Remember: Use BaseEntity's 'entity_id' when referring to other entities.
-    #parent_entity_id: uuid.UUID
-    #owner_character_id: Optional[uuid.UUID] = None
-
-    # --- Initialization Logic ---
+    
+    # Relationships
+    owner_character_id: Optional[uuid.UUID] = None
+    
     def __post_init__(self):
-        """
-        Called automatically after the dataclass is initialized.
-        The BaseEntity __post_init__ (if defined) is NOT called automatically.
-        Call super().__post_init__() if needed.
-        """
-        # Example: Basic validation for fields specific to this entity.
-        if self.level < 1:
-            raise ValueError(f"Level cannot be less than 1 for {self.name} ({self.entity_id})") # Use inherited fields
-
-        # Example: Set 'updated_at' initially if not provided.
+        """Initialize updated_at if needed."""
         if self.updated_at is None:
-            # If BaseEntity handles created_at, you might need to access it differently
-            # depending on its definition, but assuming it's directly available:
-            base_created_at = getattr(self, 'created_at', datetime.now(timezone.utc)) # Fallback just in case
-            self.updated_at = base_created_at
+            self.updated_at = self.created_at
 
-
-    # --- Representation ---
-    # __repr__ is inherited from BaseEntity.
-    # If you need to add more info, override it like this:
-    # def __repr__(self) -> str:
-    #     base_repr = super().__repr__() # Get the parent's repr string
-    #     # Find the closing parenthesis of the base repr
-    #     closing_paren_index = base_repr.rfind(')')
-    #     # Add specific fields before the closing parenthesis
-    #     specifics = f", level={self.level}, status={self.status.name}"
-    #     return base_repr[:closing_paren_index] + specifics + base_repr[closing_paren_index:]
-
-
-    # --- Domain Logic Methods ---
-    # As discussed, keep these simple or move to Managers/Services.
-    # Methods can now access inherited 'self.entity_id' and 'self.name'.
-
-
-# --- END OF FILE app/game_state/entities/_template_entity.py ---
+# --- END OF FILE app/game_state/entities/equipment.py ---

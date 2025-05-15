@@ -1,16 +1,14 @@
 # --- START OF FILE app/game_state/services/theme_service.py ---
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
-from typing import Optional, List # Added List
+from typing import Optional, List
 import logging
-import dataclasses # Added dataclasses
 
-# Import Repository, Domain Entity (and potentially an API Model for Theme)
+# Import Repository and Domain Entity
 from app.game_state.repositories.theme_repository import ThemeRepository
-from app.game_state.entities.theme import Theme as ThemeEntity
-from app.api.schemas.shared import PaginatedResponse # Import the PaginatedResponse schema
-from app.api.schemas.theme_schema import ThemeRead # Import the API schema for read operations
-# from app.game_state.models.theme import ThemeApiModel # Define if needed for API consistency
+from app.game_state.entities.theme import ThemeEntity
+from app.api.schemas.shared import PaginatedResponse
+from app.api.schemas.theme_schema import ThemeRead
 
 class ThemeService:
     def __init__(self, db: AsyncSession):
@@ -20,23 +18,26 @@ class ThemeService:
         self.repository = ThemeRepository(db=self.db)
         logging.debug("ThemeService initialized with ThemeRepository.")
 
-    async def _convert_entity_to_read_schema(self, entity: Optional[ThemeEntity]) -> Optional[ThemeRead]:
-            if entity is None: return None
-            try:
-                entity_dict = dataclasses.asdict(entity)
-                if 'entity_id' in entity_dict and 'id' not in entity_dict:
-                    entity_dict['id'] = entity_dict.pop('entity_id')
-                return ThemeRead.model_validate(entity_dict)
-            except Exception as e:
-                logging.error(f"Failed to convert ThemeEntity to Read schema: {e}", exc_info=True)
-                raise ValueError("Internal error converting theme data.")
+    @staticmethod
+    async def _convert_entity_to_read_schema(entity: Optional[ThemeEntity]) -> Optional[ThemeRead]:
+        """Convert a domain entity to an API read schema."""
+        if entity is None: 
+            return None
+            
+        try:
+            # Use the entity's to_dict method to get a dictionary representation
+            entity_dict = entity.to_dict()
+            # Validate with ThemeRead model
+            return ThemeRead.model_validate(entity_dict)
+        except Exception as e:
+            logging.error(f"Failed to convert Theme entity to Read schema: {e}", exc_info=True)
+            raise ValueError("Internal error converting theme data.")
 
-    async def get_all_themes_paginated(self, skip: int, limit: int) -> PaginatedResponse[ThemeRead]: # Return the Pydantic model
+    async def get_all_themes_paginated(self, skip: int, limit: int) -> PaginatedResponse[ThemeRead]:
         """
         Retrieves a paginated list of themes.
         """
         # Call the repository's paginated find method
-        # Pass any conditions or order_by if needed by this specific service method
         paginated_repo_result = await self.repository.find_all_paginated(
             skip=skip,
             limit=limit
@@ -58,6 +59,19 @@ class ThemeService:
             limit=paginated_repo_result["limit"],
             skip=paginated_repo_result["skip"],
         )
+
+    async def get_by_id(self, theme_id: UUID) -> Optional[ThemeRead]:
+        """Get a theme by ID and return as API schema."""
+        logging.debug(f"[ThemeService] Getting theme by ID: {theme_id}")
+        try:
+            entity = await self.repository.find_by_id(theme_id)
+            if entity:
+                return await self._convert_entity_to_read_schema(entity)
+            else:
+                return None
+        except Exception as e:
+            logging.error(f"[ThemeService] Error getting theme by ID {theme_id}: {e}")
+            return None
 
     async def exists(self, theme_id: UUID) -> bool:
         """Check if a theme exists by ID."""
@@ -124,6 +138,5 @@ class ThemeService:
         except Exception as e:
             logging.error(f"[ThemeService] Error getting all themes: {e}", exc_info=True)
             return []
-
 
 # --- END OF FILE app/game_state/services/theme_service.py ---

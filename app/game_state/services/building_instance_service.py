@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.game_state.repositories.building_instance_repository import BuildingInstanceRepository
 from app.game_state.managers.building_instance_manager import BuildingInstanceManager
-from app.game_state.entities.building_instance import BuildingInstance as BuildingInstanceEntity, BuildingStatus
+from app.game_state.entities.building_instance import BuildingInstanceEntity, BuildingStatus
 from app.api.schemas.building_instance import (
     BuildingInstanceRead,
     BuildingInstanceCreate,

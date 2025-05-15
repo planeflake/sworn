@@ -34,8 +34,9 @@ dependencies = [
     "pytest-asyncio",
     "asyncpg",
     "dramatiq",
-    "apscheduler"=3.11.0,
-    "python-multipart=0.0.20"
+    "apscheduler==3.11.0",
+    "python-multipart==0.0.20",
+    "greenlet>=3.0.0"  # Required for async SQLAlchemy operations
 ]
 
 [project.optional-dependencies]

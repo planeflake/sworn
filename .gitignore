@@ -6983,3 +6983,11 @@ rpg_idle_game.egg-info/top_level.txt
 mcp/claude_api_mcp.py
 mcp/start_mcp.py
 mcp/integration_test.py
+/CLAUDE.md
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/sworn.iml
+.idea/vcs.xml
+app/.DS_Store
+.DS_Store

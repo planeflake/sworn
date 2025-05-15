@@ -7,7 +7,7 @@ import random
 from app.game_state.models.theme import ThemeEntity
 from app.game_state.services.theme_service import ThemeService
 import uuid
-from typing import Optional
+from typing import Optional, List
 
 class ThemeCreatedResponse(BaseModel):
     """Response model for Theme creation"""
@@ -16,13 +16,13 @@ class ThemeCreatedResponse(BaseModel):
 
 class ThemeOutputResponse(BaseModel):
     """Response model for Theme output"""
-    theme: ThemeEntity
+    theme: List[ThemeEntity]
     message: str
 
 router = APIRouter()
 
 @router.post("/", response_model=ThemeCreatedResponse)
-async def create_Theme(
+async def create_theme(
         theme_id: Optional[str] = Body(default=None),
         theme_name: Optional[str] = Body(default=None),
         theme_description: Optional[str] = Body(default=None),
@@ -42,11 +42,11 @@ async def create_Theme(
         # Generate random Theme name if not provided
         if theme_name is None:
             theme_name = f"test_Theme_{random.randint(1, 1000)}"
-            
+
+        theme_service = ThemeService(db=db)
+
         # ThemeService.create_Theme must be async and take AsyncSession
-        theme = await ThemeService.create_theme(
-            db=db,
-            theme_id=theme_id,
+        theme = await theme_service.create_theme(
             name=theme_name,
             description=theme_description,
         )
@@ -62,7 +62,7 @@ async def create_Theme(
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
 
 @router.get("/", response_model=ThemeOutputResponse)
-async def list_Themes(
+async def list_themes(
         skip: int = 0,
         limit: int = 100,
         db: AsyncSession = Depends(get_async_db)
@@ -75,7 +75,7 @@ async def list_Themes(
     try:
         theme_service = ThemeService(db=db)
         themes = await theme_service.get_all_themes(skip=skip, limit=limit)
-        
+
         return ThemeOutputResponse(
             theme=themes, 
             message="Themes retrieved successfully"
@@ -86,7 +86,7 @@ async def list_Themes(
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
 
 @router.get("/{theme_id}", response_model=ThemeOutputResponse)
-async def get_Theme(
+async def get_theme(
         theme_id: str,
         db: AsyncSession = Depends(get_async_db)
     ):

@@ -9,7 +9,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload # For eager loading relationships
 
 from app.db.models.building_instance import BuildingInstanceDB
-from app.game_state.entities.building_instance import BuildingInstance as BuildingInstanceEntity
+from app.game_state.entities.building_instance import BuildingInstanceEntity
 from app.game_state.repositories.base_repository import BaseRepository
 
 class BuildingInstanceRepository(BaseRepository[BuildingInstanceEntity, BuildingInstanceDB, UUID]):

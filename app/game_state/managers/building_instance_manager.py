@@ -5,7 +5,7 @@ import uuid
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timezone
 
-from app.game_state.entities.building_instance import BuildingInstance as BuildingInstanceEntity, BuildingStatus
+from app.game_state.entities.building_instance import BuildingInstanceEntity, BuildingStatus
 from app.game_state.managers.base_manager import BaseManager # Assuming you have a BaseManager
 
 class BuildingInstanceManager(BaseManager):

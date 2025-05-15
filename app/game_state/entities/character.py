@@ -7,14 +7,14 @@ from uuid import UUID, uuid4
 
 # --- Import Enums (Ideally from domain/shared location, but DB model path used for now) ---
 # Consider moving enums like CharacterTypeEnum to app/game_state/enums.py
-from app.db.models.character import CharacterTypeEnum, CharacterStatusEnum
+from app.db.models.character import CharacterTypeEnum, CharacterStatusEnum, CharacterTraitEnum
 
 # --- Import OTHER DOMAIN ENTITIES ---
 # These should point to files within app/game_state/entities/
-from .equipment import EquipmentEntity # Assuming EquipmentEntity in entities/equipment.py
-from .skill import SkillEntity as Skill           # Assuming SkillEntity in entities/skill.py
-from .stat import StatEntity as Stat               # Assuming StatEntity in entities/stat.py
-from .item import Item              # Assuming ItemEntity in entities/item.py
+from .equipment import EquipmentEntity 
+from .skill import SkillEntity
+from .stat import StatEntity
+from .item import Item
 
 @dataclass
 class CharacterEntity: # Changed class name to CharacterEntity for clarity/convention
@@ -26,6 +26,7 @@ class CharacterEntity: # Changed class name to CharacterEntity for clarity/conve
     character_type: CharacterTypeEnum
     world_id: UUID
     description: Optional[str] = None
+    traits: List[CharacterTraitEnum] = field(default_factory=list)
 
     # --- Identifier (field with default factory) ---
     entity_id: UUID = field(default_factory=uuid4)
@@ -37,10 +38,10 @@ class CharacterEntity: # Changed class name to CharacterEntity for clarity/conve
 
 
     # --- Complex fields: Lists of other Domain Entities ---
-    stats: List[Stat] = field(default_factory=list)
+    stats: List[StatEntity] = field(default_factory=list)
     equipment: List[EquipmentEntity] = field(default_factory=list)
     items: List[Item] = field(default_factory=list) # Inventory
-    skills: List[Skill] = field(default_factory=list)
+    skills: List[SkillEntity] = field(default_factory=list)
 
     # --- Optional Foreign Keys / Links (to other entities' IDs) ---
     player_account_id: Optional[UUID] = None

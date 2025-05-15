@@ -21,8 +21,8 @@ class BuildingStatus(enum.Enum):
     # PLANNED = "PLANNED"          # Optional: Plot claimed, no resources spent yet
 
 # --- Domain Entity Definition ---
-@dataclass
-class BuildingInstance(BaseEntity): # Inherit from BaseEntity
+@dataclass(kw_only=True)
+class BuildingInstanceEntity(BaseEntity): # Inherit from BaseEntity
     """
     Domain Entity representing a specific constructed building instance in the game world.
     Acts primarily as a data holder. Business logic for state changes (e.g., damage, repair)
@@ -61,6 +61,31 @@ class BuildingInstance(BaseEntity): # Inherit from BaseEntity
     # Assuming BaseEntity might provide these. If not, uncomment and adjust __post_init__.
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = field(default_factory=lambda: datetime.now(timezone.utc))
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert BuildingInstanceEntity to a dictionary with safe serialization."""
+        result = {
+            "id": str(self.entity_id),
+            "name": self.name,
+            "building_blueprint_id": str(self.building_blueprint_id),
+            "settlement_id": str(self.settlement_id),
+            "level": self.level,
+            "status": self.status.value,
+            "current_hp": self.current_hp,
+            "max_hp": self.max_hp,
+            "inhabitants_count": self.inhabitants_count,
+            "workers_count": self.workers_count,
+            "construction_progress": self.construction_progress,
+            "current_stage_number": self.current_stage_number,
+            "stored_resources": {str(k): v for k, v in self.stored_resources.items()},
+            "assigned_workers_details": self.assigned_workers_details,
+            "active_features": [str(f) for f in self.active_features],
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+        if self.instance_description:
+            result["instance_description"] = self.instance_description
+        return result
 
     # --- Initialization Logic ---
     def __post_init__(self):
@@ -99,5 +124,8 @@ class BuildingInstance(BaseEntity): # Inherit from BaseEntity
     #         specifics = f", status={self.status.name}, hp={self.current_hp}/{self.max_hp}"
     #         return base_repr[:closing_paren_index] + specifics + base_repr[closing_paren_index:]
     #     return f"{base_repr} (status={self.status.name}, hp={self.current_hp}/{self.max_hp})"
+
+# For backward compatibility
+BuildingInstance = BuildingInstanceEntity
 
 # --- END OF FILE app/game_state/entities/building_instance.py ---

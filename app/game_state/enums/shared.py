@@ -16,3 +16,13 @@ class StatusEnum(enum.Enum):
     INACTIVE = "Inactive"
     PENDING = "Pending"
     ARCHIVED = "Archived"
+
+class TraitEnum(enum.Enum):
+    DEFENSIVE = "DEFENSIVE"
+    AGGRESSIVE = "AGGRESSIVE"
+    SUPPORTIVE = "SUPPORTIVE"
+    STRATEGIC = "STRATEGIC"
+    ECONOMICAL = "ECONOMICAL"
+    EXPANSIVE = "EXPANSIVE"
+    CULTURAL = "CULTURAL"
+    SPIRITUAL = "SPIRITUAL"

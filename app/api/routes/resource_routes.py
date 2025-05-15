@@ -1,6 +1,6 @@
 # --- START - app/api/routes/resource_routes.py ---
 
-from fastapi import APIRouter, Depends, HTTPException, Body, Query, Path
+from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from app.game_state.services.resource_service import ResourceService
 from app.game_state.enums.shared import RarityEnum, StatusEnum
 from app.game_state.models.resource import ResourceApiModel 

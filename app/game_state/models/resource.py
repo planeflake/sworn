@@ -1,20 +1,26 @@
-# --- START OF FILE app/game_state/models/resource.py ---
-
+"""
+DEPRECATED: This model is being phased out in favor of using app.game_state.entities.resource.ResourceEntity directly.
+Use app.game_state.entities.resource.ResourceEntity for domain logic and app.api.schemas.resource for API validation.
+"""
+import warnings
 import uuid
 from datetime import datetime
-from typing import Optional # Removed List, Dict, Any as not used
+from typing import Optional
 
-# --- Pydantic Imports ---
 from pydantic import BaseModel, Field
+from app.game_state.enums.shared import RarityEnum, StatusEnum
 
-# --- Import API Enums ---
-from app.game_state.enums.shared import RarityEnum, StatusEnum # Keep both
+warnings.warn(
+    "ResourceApiModel is deprecated, use app.game_state.entities.resource.ResourceEntity for domain logic and "
+    "app.api.schemas.resource for API validation",
+    DeprecationWarning,
+    stacklevel=2
+)
 
-# --- API Model Definition ---
 class ResourceApiModel(BaseModel):
     """
-    API MODEL (DTO) for Resource Types.
-    Defines the data structure for API requests/responses related to resources.
+    DEPRECATED: Use app.game_state.entities.resource.ResourceEntity and app.api.schemas.resource instead.
+    This class is maintained for backward compatibility during transition.
     """
     # --- Identifier ---
     resource_id: uuid.UUID = Field(...)
@@ -22,18 +28,26 @@ class ResourceApiModel(BaseModel):
     # --- Basic Resource Information ---
     name: str = Field(..., min_length=1, max_length=100)
     description: Optional[str] = None
-    rarity: RarityEnum = RarityEnum.COMMON # Required in API response (has default)
-    stack_size: int = Field(..., ge=1) # Required in API response (add default if desired: default=100)
-    status: StatusEnum = StatusEnum.ACTIVE # Required in API response (has default)
-    theme_id: uuid.UUID = None # Optional, can be None
+    rarity: RarityEnum = RarityEnum.COMMON
+    stack_size: int = Field(..., ge=1)
+    status: StatusEnum = StatusEnum.ACTIVE
+    theme_id: uuid.UUID = None
 
     # --- Timestamps ---
     created_at: Optional[datetime] = Field(None)
     updated_at: Optional[datetime] = Field(None)
 
-    # --- Pydantic Configuration ---
+    def __init__(self, **data):
+        super().__init__(**data)
+        warnings.warn(
+            "ResourceApiModel is deprecated, use app.game_state.entities.resource.ResourceEntity for domain logic and "
+            "app.api.schemas.resource for API validation",
+            DeprecationWarning,
+            stacklevel=2
+        )
+
     class Config:
-        from_attributes = True # Allows Pydantic to populate from ORM attributes
+        from_attributes = True
 
         json_schema_extra = {
             "example": {
@@ -47,5 +61,3 @@ class ResourceApiModel(BaseModel):
                 "updated_at": "2024-01-10T15:30:00Z",
             }
         }
-
-# --- END OF FILE app/game_state/models/resource.py ---

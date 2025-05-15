@@ -1,98 +1,144 @@
-# app/game_state/workers/world_worker.py
+# app/game_state/workers/settlement_worker.py
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Optional, Dict, Any
 import asyncio
 import uuid
-from redis.exceptions import LockError
 
 from app.core.celery_app import app
-from app.core.redis import create_task_lock
-from app.db.async_session import get_db_session, get_session
+from app.db.async_session import get_db_session
 from app.game_state.services.settlement_service import SettlementService
+from app.game_state.models.settlement import SettlementEntity
+from app.game_state.workers.worker_utils import with_task_lock, run_async_task
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 @app.task
-def expand_settlement(world_id=None):
+@with_task_lock(task_name="expand_settlement", timeout=20)
+def expand_settlement(world_id=None, task_id=None):
     """Task entry point - uses a persistent event loop for the worker"""
-    print("TASK: expand_settlement - STARTED")
+    logging.info("TASK: expand_settlement - STARTED")
     
-    # Generate a task ID for logging
-    task_id = str(uuid.uuid4())
-    
-    # Get a lock using the helper function from our centralized Redis module
-    lock = create_task_lock(
-        task_name="expand_settlement",
-        resource_id=world_id,
-        timeout=20
-    )
-    
-    have_lock = False
-    
-    try:
-        # Try to acquire lock - non-blocking to prevent queue buildup
-        have_lock = lock.acquire(blocking=False)
-        
-        if not have_lock:
-            print(f"Task {task_id}: Lock already held for world: {world_id or 'ALL'}, skipping execution")
-            return {
-                "success": False, 
-                "skipped": True, 
-                "reason": "Another task is already processing this world"
-            }
-            
-        print(f"Task {task_id}: Acquired lock for world: {world_id or 'ALL'}, proceeding with execution")
-        
-        # Get or create an event loop - don't close it after use
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            # No event loop in current thread, create a new one
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            print(f"Task {task_id}: Created new event loop")
-        
-        # Run the async implementation
-        return loop.run_until_complete(_expand_settlement_async(world_id, task_id))
-        
-    except Exception as e:
-        logger.exception(f"Task {task_id}: Error in advance_game_day: {str(e)}")
-        return {"success": False, "error": str(e)}
-    finally:
-        # Always release the lock if we have it, even if an exception occurred
-        if have_lock:
-            try:
-                lock.release()
-                print(f"Task {task_id}: Released lock for world: {world_id or 'ALL'}")
-            except LockError:
-                # Lock might have expired
-                logger.warning(f"Task {task_id}: Failed to release lock - it may have expired")
+    # Run the async implementation using the utility function
+    return run_async_task(_expand_settlement_async, world_id, task_id)
 
-async def expand_settlement_async(settlement_id: str) -> Dict[str, Any]:
+async def expand_settlement_async(settlement_id: str) -> SettlementEntity:
     """
     Asynchronous function to expand a settlement.
     """
     # Get a database session
     async with get_db_session() as session:
-        # Create an instance of WorldService
-        settlement_esrvice = SettlementService(db=session)
+        # Create an instance of SettlementService
+        settlement_service = SettlementService(db=session)
         
         # Call the service method to expand the settlement
-        result = await settlement_esrvice.expand_settlement(settlement_id=settlement_id)
+        result = await settlement_service.expand_settlement(settlement_id=settlement_id)
         
         return result
     
-async def _expand_settlement_async(world_id: Optional[str], task_id: str) -> Dict[str, Any]:    
+async def _expand_settlement_async(world_id: Optional[uuid], task_id: str) -> Dict[str, Any]:
     """
-    Asynchronous function to expand a settlement.
+    Asynchronous function to expand a settlement based on leader traits.
+    
+    This worker:
+    1. Gets settlements in the world
+    2. For each settlement with a leader, evaluates building options
+    3. Selects and constructs the highest-scoring building
+    
+    Args:
+        world_id: Optional world ID to filter settlements
+        task_id: Task identifier for logging
+        
+    Returns:
+        Dict containing results of the settlement expansion
     """
+    print(f"Task {task_id}: Starting expansion for world: {world_id or 'ALL WORLDS'}")
+    
     # Get a database session
     async with get_db_session() as session:
-        # Create an instance of WorldService
-        settlement_esrvice = SettlementService(db=session)
+        # Create service instances
+        settlement_service = SettlementService(db=session)
+        from app.game_state.services.building_evaluation_service import BuildingEvaluationService
+        building_evaluation_service = BuildingEvaluationService(db=session)
+        from app.game_state.services.building_instance_service import BuildingInstanceService
+        building_service = BuildingInstanceService(db=session)
         
-        # Call the service method to expand the settlement
-        result = await settlement_esrvice.expand_settlement(world_id=world_id)
+        # Get settlements to process
+        settlements = []
+        if world_id:
+            # Get settlements in specific world
+            settlements = await settlement_service.get_settlements_by_world(world_id)
+        else:
+            # Get all settlements
+            settlements = await settlement_service.get_all_settlements()
+            
+        print(f"Task {task_id}: Found {len(settlements)} settlements to process")
         
-        return result
+        # Process each settlement
+        results = []
+        for settlement in settlements:
+            try:
+                settlement_id = settlement.entity_id
+                print(f"Task {task_id}: Processing settlement {settlement.name} (ID: {settlement_id})")
+                
+                # Skip settlements without a leader
+                if not settlement.leader_id:
+                    print(f"Task {task_id}: Settlement {settlement.name} has no leader, skipping")
+                    results.append({
+                        "settlement_id": str(settlement_id),
+                        "name": settlement.name,
+                        "action": "skipped",
+                        "reason": "No leader assigned"
+                    })
+                    continue
+                
+                # Get building recommendations based on leader traits
+                recommendations = await building_evaluation_service.get_recommended_building_ids(settlement_id)
+                
+                if not recommendations:
+                    print(f"Task {task_id}: No recommended buildings for settlement {settlement.name}")
+                    results.append({
+                        "settlement_id": str(settlement_id),
+                        "name": settlement.name,
+                        "action": "skipped",
+                        "reason": "No suitable buildings available"
+                    })
+                    continue
+                
+                # Select highest scored building
+                top_blueprint_id, score = recommendations[0]
+                
+                print(f"Task {task_id}: Selected building blueprint {top_blueprint_id} with score {score}")
+                
+                # TODO: Check if settlement can afford this building
+                # This would be added when the resource management system is completed
+                
+                # TODO: Create a new building instance
+                # This would be added when the building construction system is completed
+                
+                results.append({
+                    "settlement_id": str(settlement_id),
+                    "name": settlement.name,
+                    "action": "identified",
+                    "building_blueprint_id": str(top_blueprint_id),
+                    "score": score,
+                    "status": "Identified optimal building, but construction not yet implemented"
+                })
+                
+            except Exception as e:
+                print(f"Task {task_id}: Error processing settlement {settlement.name if settlement else 'Unknown'}: {e}")
+                results.append({
+                    "settlement_id": str(settlement.entity_id) if settlement else "unknown",
+                    "name": settlement.name if settlement else "Unknown",
+                    "action": "error",
+                    "error": str(e)
+                })
+        
+        return {
+            "success": True,
+            "processed_settlements": len(settlements),
+            "pending_construction": len([r for r in results if r.get("action") == "identified"]),
+            "skipped_settlements": len([r for r in results if r.get("action") == "skipped"]),
+            "error_settlements": len([r for r in results if r.get("action") == "error"]),
+            "results": results
+        }

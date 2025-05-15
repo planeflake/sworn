@@ -1,15 +1,14 @@
 import logging
 import random
-from typing import Optional, Type 
-from uuid import UUID 
+from typing import Optional
+from uuid import UUID
 
-from sqlalchemy.ext.asyncio import AsyncSession 
-from fastapi import HTTPException 
+from sqlalchemy import Boolean
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
-from app.api.schemas.character import CharacterRead, CharacterCreate 
-from app.db.models.character import Character as CharacterDBModel
-from app.game_state.entities.character import CharacterEntity 
+from app.api.schemas.character import CharacterRead, CharacterCreate
+from app.game_state.entities.character import CharacterEntity
 from app.game_state.managers.character_manager import CharacterManager
 from app.game_state.repositories.character_repository import CharacterRepository
 from app.game_state.services.world_service import WorldService
@@ -33,11 +32,17 @@ class CharacterService:
             return self._world_service_instance
         return WorldService(db=self.db) # Create if not provided
 
-    async def _convert_entity_to_read_schema(self, entity: Optional[CharacterEntity]) -> Optional[CharacterRead]:
+    @classmethod
+    async def _convert_entity_to_read_schema(cls, entity: Optional[CharacterEntity]) -> Optional[CharacterRead]:
         """Helper to convert domain entity to Pydantic Read schema."""
         if not entity:
             return None
         try:
+            # Check if entity is actually a CharacterEntity before processing
+            if not isinstance(entity, CharacterEntity):
+                logging.error(f"Expected CharacterEntity but got {type(entity)}")
+                return None
+                
             entity_dict = dataclasses.asdict(entity)
             # Handle potential 'entity_id' vs 'id' mismatch
             if 'entity_id' in entity_dict and 'id' not in entity_dict:
@@ -53,8 +58,24 @@ class CharacterService:
         """Fetches a character by name and returns its API representation."""
         logging.info(f"Fetching character by name: {name}")
 
-        character_entity = await self.character_repository.find_by_name(name) 
+        character_entity = await self.character_repository.get_by_name(name)
         return await self._convert_entity_to_read_schema(character_entity)
+
+    async def get_by_id(self, character_id: UUID) -> Optional[CharacterRead]:
+        """Fetches a character by ID and returns its API representation."""
+        logging.info(f"Fetching character by ID: {character_id}")
+        character_entity = await self.character_repository.find_by_id(character_id)
+        return await self._convert_entity_to_read_schema(character_entity)
+
+    async def get_by_player(self,player_id: UUID):
+        """
+        Fetches all characters belonging to a player.
+
+        arguments: player_id:UUID
+        returns: list of characters as CharacterRead objects
+        """
+        # TODO: Implement once player entity is added.
+        pass
 
     async def create_character(self, character_data: CharacterCreate) -> CharacterRead: 
         """
@@ -140,7 +161,7 @@ class CharacterService:
             logging.warning(f"Character ID: {character_id} not found for deletion.")
         return deleted
 
-    async def add_resources(self, character_id: UUID, resources: dict) -> bool:
+    async def add_resources(self, character_id: UUID, resources: list) -> Boolean:
         """
         Adds resources to a character.
 
@@ -151,6 +172,8 @@ class CharacterService:
         Returns:
             True if the operation was successful, False otherwise.
         """
+        #TODO: implement add_resources to character repository
+
         logging.info(f"Adding resources to character ID: {character_id}")
 
         # This method should be implemented in the repository or service layer

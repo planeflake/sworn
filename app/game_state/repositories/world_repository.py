@@ -2,9 +2,8 @@
 import json
 import os
 import redis.asyncio as redis
-from app.db.models.world import World
-from app.game_state.models.world import WorldEntity
-from app.game_state.entities.world import World as WorldDomainEntity # Domain Entity (dataclass)
+from app.db.models.world import World as WorldModel
+from app.game_state.entities.world import WorldEntity
 from app.game_state.repositories.base_repository import BaseRepository
 import logging
 from typing import List, Optional, Union, Dict, Any
@@ -28,15 +27,18 @@ redis_pool = redis.ConnectionPool(
     decode_responses=True
 )
 
-class WorldRepository(BaseRepository[WorldDomainEntity, World, UUID]):
-    def __init__(self, db: AsyncSession, model_cls: type = World, entity_cls: type = WorldDomainEntity):
+class WorldRepository(BaseRepository[WorldEntity, WorldModel, UUID]):
+    def __init__(self, db: AsyncSession, model_cls=WorldModel, entity_cls=WorldEntity):
         """
         Initializes the WorldRepository with a database session and model class.
         
         Args:
             db: The asynchronous SQLAlchemy session.
+            model_cls: The SQLAlchemy model class
+            entity_cls: The domain entity class 
         """
-        super().__init__(db=db, model_cls=World,entity_cls=WorldDomainEntity)
+        super().__init__(db=db, model_cls=model_cls, entity_cls=entity_cls)
+        logging.info(f"WorldRepository initialized with model {model_cls.__name__} and entity {entity_cls.__name__}")
 
     @staticmethod
     def _serialize_for_json(data: Dict[str, Any]) -> Dict[str, Any]:
@@ -50,4 +52,16 @@ class WorldRepository(BaseRepository[WorldDomainEntity, World, UUID]):
             else:
                 result[key] = value
         return result
-    
+        
+    async def find_by_name(self, name: str) -> Optional[WorldEntity]:
+        """Finds a world by its name."""
+        logging.debug(f"[WorldRepository] Finding world by name: {name}")
+        stmt = select(self.model_cls).where(self.model_cls.name == name)
+        result = await self.db.execute(stmt)
+        db_obj = result.scalars().first()
+        if db_obj:
+            logging.debug(f"[WorldRepository] Found world by name: {name}, ID: {db_obj.id}")
+            return await self._convert_to_entity(db_obj)
+        else:
+            logging.debug(f"[WorldRepository] World not found by name: {name}")
+            return None

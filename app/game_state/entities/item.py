@@ -1,109 +1,99 @@
-# --- START OF FILE app/game_state/entities/_template_entity.py ---
-# Rename this file to match your specific entity (e.g., building_entity.py, item_entity.py)
+# --- START OF FILE app/game_state/entities/item.py ---
 
-# --- Core Python Imports ---
 import uuid
-from uuid import UUID,uuid4
 import enum
-from datetime import datetime, date, time # Import date/time types as needed
-from typing import Optional, List, Dict, Any # For Python type hinting
-from dataclasses import dataclass, field    # Core dataclass tools
+from dataclasses import dataclass, field, asdict
+from datetime import datetime, timezone
+from typing import Optional, List, Dict, Any
 
-# --- Import Domain Enums & Other Domain Entities ---
-# Define or import Enums relevant to this domain entity
-# from app.game_state.enums import ExampleStatusEnum # Example import
-class Slot(enum.Enum):
-    #Armour slots
-    HEAD = "ACTIVE"
+from .base import BaseEntity
+from app.game_state.enums.shared import StatusEnum, RarityEnum
+
+# Equipment slots enum
+class ItemSlot(enum.Enum):
+    # Armor slots
+    HEAD = "HEAD"
     SHOULDERS = "SHOULDERS"
-    CHEST = "INACTIVE"
-    HANDS = "HANDS"
+    CHEST = "CHEST"
+    HANDS = "HANDS" 
     WRISTS = "WRISTS"
     WAIST = "WAIST"
     LEGS = "LEGS"
     FEET = "FEET"
-
-    #Jewelry slots
-    NECK = "NECK"
-    FINGER = "FINGER"
-    TRINKET = "TRINKET"
-
-    #Cloak
-    BACK = "BACK"
-
-    #Weapon slots
+    
+    # Weapon/accessory slots
     MAIN_HAND = "MAIN_HAND"
     OFF_HAND = "OFF_HAND"
-    TWO_HAND = "TWO_HAND"
+    RANGED = "RANGED"
+    NECK = "NECK"
+    FINGER1 = "FINGER1"
+    FINGER2 = "FINGER2"
+    TRINKET1 = "TRINKET1"
+    TRINKET2 = "TRINKET2"
+    CLOAK = "CLOAK"
+    
+    # Non-equipment items 
+    NONE = "NONE"  # General inventory items that aren't equippable
 
-    #Quick slots
-    QUICK_SLOT_1 = "QUICK_SLOT_1"
-    QUICK_SLOT_2 = "QUICK_SLOT_2"
-    QUICK_SLOT_3 = "QUICK_SLOT_3"
-    QUICK_SLOT_4 = "QUICK_SLOT_4"
-    QUICK_SLOT_5 = "QUICK_SLOT_5"
-
-# Define or import other domain entities this entity might contain/reference
-# Use relative imports if they are in the same 'entities' folder
-# from .related_entity import RelatedEntity # Example import
 @dataclass
-class RelatedEntity: # Placeholder definition
-    entity_id: uuid.UUID = field(default_factory=uuid.uuid4)
-    name: str = "Related"
-
-# --- Base Entity (Optional but Recommended) ---
-# Assume you have a base domain entity like this defined in entities/base.py:
-# @dataclass
-# class BaseEntity:
-#     entity_id: uuid.UUID = field(default_factory=uuid.uuid4)
-#     name: str = "Unnamed Entity"
-# If using a base entity, import and inherit from it:
-from .base import BaseEntity # Assuming entities/base.py exists
-from app.game_state.enums.shared import StatusEnum, RarityEnum
-
-
-# --- Entity Definition ---
-# Rename 'TemplateEntity' and adjust inheritance if needed
-@dataclass
-class Item(BaseEntity):  # Inherit from your domain BaseEntity
+class ItemEntity(BaseEntity):
     """
-    ITEM TEMPLATE (@dataclass).
-    Represents the internal state and data for core game logic.
+    Domain Entity representing an item in the game.
+    Inherits entity_id and name from BaseEntity.
     """
-    # --- Override BaseEntity Fields ---
-    entity_id: UUID = field(default_factory=uuid4, init=False)  # Exclude from constructor
-    name: str = field(default="Unnamed Entity", init=False)  # Exclude from constructor
-
-    # --- Required Fields (Specific to this Entity) ---
-    slot: str  # Must be provided on creation
-
-    # --- Optional Basic Types ---
-    description: Optional[str] = None
-    count: Optional[int] = None
-    value: Optional[float] = None
-    is_important: bool = False
-
-    # --- Domain Enum ---
+    # Item attributes
+    description: Optional[str] = None 
+    slot: ItemSlot = ItemSlot.NONE
+    quantity: int = 1
+    weight: float = 0.0
+    value: float = 0.0
+    is_stackable: bool = False
+    is_tradable: bool = True
+    
+    # Item quality and status
     status: StatusEnum = StatusEnum.ACTIVE
     rarity: RarityEnum = RarityEnum.COMMON
-    for_sale_at: Optional[UUID] = None
-    base_price: Optional[float] = None
-    reputation_modifier: Optional[float] = None
-
-    # --- Date/Time Fields ---
-    event_timestamp: Optional[datetime] = None
-    start_date: Optional[date] = None
-
-    # --- Complex Types ---
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    tags: List[str] = field(default_factory=list)
-    related_entities: List[RelatedEntity] = field(default_factory=list)
-
-    # --- Links to other Entities ---
-    related_entity_id: Optional[uuid.UUID] = None
-
-    # --- Timestamps ---
-    created_at: Optional[datetime] = None
+    
+    # Market information
+    for_sale_at: Optional[uuid.UUID] = None # Shop/Market ID
+    buy_price: Optional[float] = None
+    sell_price: Optional[float] = None
+    
+    # Additional game mechanics
+    requirements: Dict[str, Any] = field(default_factory=dict)
+    effects: Dict[str, Any] = field(default_factory=dict)
+    
+    # Timestamps
+    created_at: Optional[datetime] = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
 
-# --- END OF FILE app/game_state/entities/_template_entity.py ---
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert ItemEntity to a dictionary with safe serialization."""
+        # Manually create dictionary instead of using asdict to avoid inheritance issues
+        data = {
+            "id": str(self.entity_id),
+            "name": self.name,
+            "description": self.description,
+            "slot": self.slot.value,
+            "quantity": self.quantity,
+            "weight": self.weight,
+            "value": self.value,
+            "is_stackable": self.is_stackable,
+            "is_tradable": self.is_tradable,
+            "status": self.status.value,
+            "rarity": self.rarity.value,
+            "for_sale_at": str(self.for_sale_at) if self.for_sale_at else None,
+            "buy_price": self.buy_price,
+            "sell_price": self.sell_price,
+            "requirements": self.requirements,
+            "effects": self.effects,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+        
+        return data
+
+# For backward compatibility
+Item = ItemEntity
+
+# --- END OF FILE app/game_state/entities/item.py ---

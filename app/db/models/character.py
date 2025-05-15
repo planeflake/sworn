@@ -13,7 +13,7 @@ from sqlalchemy.dialects.postgresql import UUID as pgUUID, JSONB
 from sqlalchemy.sql import text
 
 from .base import Base
-from app.game_state.enums.character import CharacterTypeEnum, CharacterStatusEnum # Assuming this path is correct
+from app.game_state.enums.character import CharacterTypeEnum, CharacterStatusEnum, CharacterTraitEnum
 
 # TYPE CHECKING IMPORTS for RELATIONSHIPS
 from typing import TYPE_CHECKING
@@ -49,6 +49,10 @@ class Character(Base):
     character_type: Mapped[CharacterTypeEnum] = mapped_column(
         SQLAlchemyEnum(CharacterTypeEnum, name="character_type_enum", create_type=False),
         nullable=False, index=True
+    )
+    character_traits: Mapped[List[CharacterTraitEnum]] = mapped_column(
+        SQLAlchemyEnum(CharacterTraitEnum, name="character_trait_enum", create_type=False),
+        nullable=True, default=lambda: [], index=True
     )
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     level: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default='1')
