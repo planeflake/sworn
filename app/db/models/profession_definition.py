@@ -1,56 +1,37 @@
 # --- START OF FILE app/db/models/profession_definition.py ---
 
 import uuid
-import enum
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 
 from sqlalchemy import (
-    Integer, String, Text, Boolean, DateTime,
-    ForeignKey, UniqueConstraint, Index, func,
-    Enum as SQLAlchemyEnum # Import Enum directly for the column type
+    String, Text, DateTime,
+    Index, func,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as pgUUID, JSONB, ARRAY # ARRAY needed
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.dialects import postgresql as pg  #import UUID as pgUUID, JSONB, ARRAY
 from sqlalchemy.sql import text
 
 from .base import Base
-
-# --- Enums ---
-class ProfessionCategory(enum.Enum):
-    # ... (as before) ...
-    CRAFTING = "CRAFTING"
-    GATHERING = "GATHERING"
-    COMBAT = "COMBAT"
-    SOCIAL = "SOCIAL"
-    SERVICE = "SERVICE"
-    MANAGEMENT = "MANAGEMENT"
-
-class ProfessionUnlockType(enum.Enum):
-    # ... (as before) ...
-    NPC_TEACHER = "npc_teacher"
-    ITEM_MANUAL = "item_manual"
-    WORLD_OBJECT = "world_object"
-    QUEST_COMPLETION = "quest_completion"
-    SKILL_THRESHOLD = "skill_threshold"
+from app.game_state.enums.profession import ProfessionCategory
 
 # --- Model ---
 class ProfessionDefinition(Base):
     __tablename__ = 'profession_definitions'
 
     id: Mapped[uuid.UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+        pg.UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True, index=True)
     display_name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     category: Mapped[Optional[ProfessionCategory]] = mapped_column(String(50), nullable=True, index=True) # String approach
 
-    skill_requirements: Mapped[Optional[List[Dict[str, Any]]]] = mapped_column(JSONB, nullable=True)
-    available_theme_ids: Mapped[Optional[List[uuid.UUID]]] = mapped_column(ARRAY(pgUUID(as_uuid=True)), nullable=True)
+    skill_requirements: Mapped[Optional[List[Dict[str, Any]]]] = mapped_column(pg.JSONB, nullable=True)
+    available_theme_ids: Mapped[Optional[List[uuid.UUID]]] = mapped_column(pg.ARRAY(pg.UUID(as_uuid=True)), nullable=True)
 
     # --- CHANGE: Storing Unlock Types ---
-    # Using PostgreSQL ARRAY of Enums (requires native ENUM type in DB)
+    # Using Postgres ARRAY of Enums (requires native ENUM type in DB)
     # Option 1a: Native ENUM ARRAY (Cleanest ORM mapping, requires migration management for the ENUM type itself)
     # valid_unlock_methods: Mapped[Optional[List[ProfessionUnlockType]]] = mapped_column(
     #     ARRAY(SQLAlchemyEnum(ProfessionUnlockType, name="profession_unlock_type_enum", create_type=False)),
@@ -60,7 +41,7 @@ class ProfessionDefinition(Base):
 
     # Option 1b: ARRAY of Strings (Simpler DB setup, validation shifts more to Python)
     valid_unlock_methods: Mapped[Optional[List[str]]] = mapped_column(
-        ARRAY(String(50)), # Store enum *values* (strings) in the array
+        pg.ARRAY(String(50)), # Store enum *values* (strings) in the array
         nullable=True,
         comment="List of valid methods (strings) to unlock this profession. Corresponds to ProfessionUnlockType values."
     )
@@ -68,7 +49,7 @@ class ProfessionDefinition(Base):
 
     # --- Unlock Conditions Data (Still Needed) ---
     unlock_condition_details: Mapped[Optional[List[Dict[str, Any]]]] = mapped_column(
-        JSONB, nullable=True,
+        pg.JSONB, nullable=True,
         comment="Detailed data for each unlock type. E.g., [{'type': 'npc_teacher', 'target_id': 'master_smith_prof_id'}, ...]"
         # This still holds the specifics (WHICH NPC, WHICH item)
     )
@@ -76,7 +57,7 @@ class ProfessionDefinition(Base):
     # --- Configuration for Logic Handling ---
     python_class_override: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     archetype_handler: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    configuration_data: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    configuration_data: Mapped[Optional[Dict[str, Any]]] = mapped_column(pg.JSONB, nullable=True)
 
     # --- Timestamps ---
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)

@@ -1,6 +1,6 @@
 from app.game_state.services.character_service import CharacterService
 from app.game_state.enums.character import CharacterTypeEnum
-from app.api.schemas.character import CharacterCreate
+from app.api.schemas.character import CharacterCreate, CharacterTraitsUpdate, AddCharacterTraits
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.dependencies import get_async_db 
@@ -14,10 +14,10 @@ import logging
 class CharacterRead(BaseModel):
     id: UUID
     name: str
-    description: Optional[str]
+    description: Optional[str] = None
+    character_type: Optional[CharacterTypeEnum] = None
     world_id: UUID
-    population: int
-    resources: Optional[list]
+    theme_id: Optional[UUID] = None
     created_at: datetime
     updated_at: Optional[datetime]
 
@@ -29,7 +29,6 @@ class CharacterRead(BaseModel):
                 "name": f"test_Character_{random.randint(1, 1000)}",
                 "world_id": "9368e202-a217-464c-953d-78ea89dacb01",
                 "description": "test character",
-
             }
         }
 
@@ -168,4 +167,103 @@ async def add_resources_to_character(
     except Exception as e:
         # Log the exception for debugging
         logging.exception(f"Error adding resources to character: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+
+@router.get("/{character_id}/traits")
+async def get_character_traits(
+        character_id: UUID,
+        db: AsyncSession = Depends(get_async_db)
+    ):
+    """
+    Get a character's traits by its ID.
+    
+    If the character is not found, a 404 error will be raised.
+    """
+    try:
+        character_service = CharacterService(db=db)
+        character = await character_service.get_by_id(character_id=character_id)
+        
+        if not character:
+            raise HTTPException(status_code=404, detail="Character not found.")
+        
+        # Get the character's traits
+        traits = await character_service.get_character_traits(character_id=character_id)
+        
+        return {"traits": [trait.value for trait in traits]}
+    except Exception as e:
+        # Log the exception for debugging
+        logging.exception(f"Error getting character traits: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+
+@router.put("/{character_id}/traits")
+async def update_character_traits(
+        character_id: UUID,
+        traits_data: CharacterTraitsUpdate,
+        db: AsyncSession = Depends(get_async_db)
+    ):
+    """
+    Replace all of a character's traits with the provided list.
+    
+    If the character is not found, a 404 error will be raised.
+    """
+    try:
+        character_service = CharacterService(db=db)
+        character = await character_service.get_by_id(character_id=character_id)
+        
+        if not character:
+            raise HTTPException(status_code=404, detail="Character not found.")
+        
+        # Update the character's traits
+        updated_character = await character_service.update_traits(character_id=character_id, traits_data=traits_data)
+        
+        if not updated_character:
+            raise HTTPException(status_code=404, detail="Failed to update character traits.")
+        
+        return {"message": "Character traits updated successfully.", "character": updated_character}
+    except ValueError as e:
+        # Handle validation errors
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        # Log the exception for debugging
+        logging.exception(f"Error updating character traits: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+        
+@router.post("/{character_id}/traits")
+async def add_character_traits(
+        character_id: UUID,
+        traits_data: AddCharacterTraits,
+        db: AsyncSession = Depends(get_async_db)
+    ):
+    """
+    Add one or more traits to a character, preserving existing traits.
+    
+    If the character is not found, a 404 error will be raised.
+    
+    Example:
+    ```json
+    {
+        "traits": ["STRATEGIC", "EXPANSIVE"]
+    }
+    ```
+    """
+    try:
+        character_service = CharacterService(db=db)
+        character = await character_service.get_by_id(character_id=character_id)
+        
+        if not character:
+            raise HTTPException(status_code=404, detail="Character not found.")
+        
+        # Add traits to the character
+        updated_character = await character_service.add_traits(character_id=character_id, traits_data=traits_data)
+        
+        if not updated_character:
+            raise HTTPException(status_code=404, detail="Failed to add character traits.")
+        
+        return {"message": "Traits added to character successfully.", "character": updated_character}
+    except ValueError as e:
+        # Handle validation errors
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        # Log the exception for debugging
+        logging.exception(f"Error adding character traits: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")

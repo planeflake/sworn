@@ -1,0 +1,85 @@
+from typing import List, Optional, Dict, Any, Union
+from uuid import UUID
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.game_state.entities.{{ entity_file }} import {{ entity_name }}Entity
+from app.game_state.managers.{{ manager_file }} import {{ entity_name }}Manager
+from app.db.dependencies import get_db_session
+
+class {{ entity_name }}Service:
+    """
+    Service for {{ entity_name_readable }} operations.
+    Provides application-level logic for {{ entity_name_readable }} entities.
+    """
+    
+    def __init__(self, manager: {{ entity_name }}Manager):
+        self.manager = manager
+    
+    async def create_{{ entity_name_snake }}(
+        self,
+        {% for field in fields %}
+        {% if field.name != 'id' %}
+        {{ field.name }}: {{ field.type_annotation }}{% if not field.required %} = None{% endif %},
+        {% endif %}
+        {% endfor %}
+        **kwargs
+    ) -> {{ entity_name }}Entity:
+        """
+        Create a new {{ entity_name_readable }}
+        """
+        async with get_db_session() as session:
+            entity = await self.manager.create_{{ entity_name_snake }}(
+                session,
+                {% for field in fields %}
+                {% if field.name != 'id' %}
+                {{ field.name }}={{ field.name }},
+                {% endif %}
+                {% endfor %}
+                **kwargs
+            )
+            return entity
+    
+    async def get_{{ entity_name_snake }}(self, id: Union[UUID, str]) -> Optional[{{ entity_name }}Entity]:
+        """
+        Get {{ entity_name_readable }} by ID
+        """
+        async with get_db_session() as session:
+            return await self.manager.get_{{ entity_name_snake }}(session, id)
+    
+    async def get_all_{{ entity_name_snake_plural }}(self) -> List[{{ entity_name }}Entity]:
+        """
+        Get all {{ entity_name_readable }}s
+        """
+        async with get_db_session() as session:
+            return await self.manager.get_all_{{ entity_name_snake_plural }}(session)
+    
+    async def update_{{ entity_name_snake }}(
+        self, 
+        id: Union[UUID, str], 
+        {% for field in fields %}
+        {% if field.name != 'id' %}
+        {{ field.name }}: {{ field.type_annotation }} = None,
+        {% endif %}
+        {% endfor %}
+    ) -> Optional[{{ entity_name }}Entity]:
+        """
+        Update {{ entity_name_readable }}
+        """
+        async with get_db_session() as session:
+            updated_entity = await self.manager.update_{{ entity_name_snake }}(
+                session,
+                id,
+                {% for field in fields %}
+                {% if field.name != 'id' %}
+                {{ field.name }}={{ field.name }},
+                {% endif %}
+                {% endfor %}
+            )
+            return updated_entity
+    
+    async def delete_{{ entity_name_snake }}(self, id: Union[UUID, str]) -> bool:
+        """
+        Delete {{ entity_name_readable }}
+        """
+        async with get_db_session() as session:
+            return await self.manager.delete_{{ entity_name_snake }}(session, id)

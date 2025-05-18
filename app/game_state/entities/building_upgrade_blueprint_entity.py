@@ -3,11 +3,11 @@
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Optional, List, Dict, Any
+from typing import Optional, Dict, Any
 
 from .base import BaseEntity
 
-@dataclass
+@dataclass(kw_only=True)
 class BuildingUpgradeBlueprintEntity(BaseEntity):
     """
     Domain Entity for a Building Upgrade Blueprint.

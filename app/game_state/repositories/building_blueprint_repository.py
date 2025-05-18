@@ -2,14 +2,14 @@
 
 import logging
 import uuid
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, cast
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy.orm import selectinload
 
 from app.db.models.building_blueprint import BuildingBlueprint as BuildingBlueprintDB
-from app.db.models.blueprint_stage import BlueprintStage as BlueprintStageDB # Assuming this path
+from app.db.models.blueprint_stage import BlueprintStage as BlueprintStageDB
 from app.db.models.blueprint_stage_feature import BlueprintStageFeature as BlueprintStageFeatureDB # Assuming this path
 
 from app.game_state.entities.building_blueprint import (
@@ -18,7 +18,6 @@ from app.game_state.entities.building_blueprint import (
     BlueprintStageFeatureEntity
 )
 from app.game_state.repositories.base_repository import BaseRepository
-import dataclasses # For converting entity to dict
 
 class BuildingBlueprintRepository(BaseRepository[BuildingBlueprintEntity, BuildingBlueprintDB, uuid.UUID]):
     def __init__(self, db: AsyncSession):
@@ -28,58 +27,59 @@ class BuildingBlueprintRepository(BaseRepository[BuildingBlueprintEntity, Buildi
             f"and entity: {self.entity_cls.__name__}"
         )
 
-    async def _convert_db_stages_to_entity_stages(self, db_stages: List[BlueprintStageDB]) -> List[BlueprintStageEntity]:
+    @staticmethod
+    async def _convert_db_stages_to_entity_stages(db_stages: List[BlueprintStageDB]) -> List[BlueprintStageEntity]:
         entity_stages = []
+
         for db_stage in db_stages:
             entity_features = []
-            if db_stage.optional_features: # Ensure features list exists and is not None
+            if db_stage.optional_features:
                 for db_feature in db_stage.optional_features:
-                    feature_data = {f.name: getattr(db_feature, f.name) for f in dataclasses.fields(BlueprintStageFeatureEntity) if hasattr(db_feature, f.name)}
-                    feature_data['entity_id'] = db_feature.id # Map DB id to entity_id
-                    # feature_data['name'] is already mapped by the loop if it's a dataclass field and exists on db_feature
+                    # Manually create feature entities without using dataclass fields
+                    feature_data = {
+                        'entity_id': db_feature.id,
+                        'name': db_feature.name,
+                        'blueprint_stage_id': db_feature.blueprint_stage_id,
+                        'feature_key': db_feature.feature_key,
+                        'description': db_feature.description,
+                        'required_professions': getattr(db_feature, 'required_professions', []),
+                        'additional_resource_costs': getattr(db_feature, 'additional_resource_costs', []),
+                        'additional_duration_days': getattr(db_feature, 'additional_duration_days', None),
+                        'effects': getattr(db_feature, 'effects', {}),
+                        'created_at': getattr(db_feature, 'created_at', None),
+                        'updated_at': getattr(db_feature, 'updated_at', None),
+                    }
                     entity_features.append(BlueprintStageFeatureEntity(**feature_data))
+
+            # Manually create stage entity without using dataclass fields
+            # Ensure timestamps are datetime objects, not strings
+            created_at = getattr(db_stage, 'created_at', None)
+            updated_at = getattr(db_stage, 'updated_at', None)
             
-            stage_data = {f.name: getattr(db_stage, f.name) for f in dataclasses.fields(BlueprintStageEntity) if f.name != 'optional_features' and hasattr(db_stage, f.name)}
-            stage_data['entity_id'] = db_stage.id
-            stage_data['optional_features'] = entity_features
-            entity_stages.append(BlueprintStageEntity(**stage_data))
-        entity_stages.sort(key=lambda s: s.stage_number) # Ensure sorted
+            stage_data = {
+                'entity_id': db_stage.id,
+                'name': db_stage.name,
+                'building_blueprint_id': db_stage.building_blueprint_id,
+                'stage_number': db_stage.stage_number,
+                'description': db_stage.description,
+                'duration_days': getattr(db_stage, 'duration_days', 0.0),
+                'resource_costs': getattr(db_stage, 'resource_costs', []),
+                'profession_time_bonus': getattr(db_stage, 'profession_time_bonus', []),
+                'stage_completion_bonuses': getattr(db_stage, 'stage_completion_bonuses', []),
+                'created_at': created_at,
+                'updated_at': updated_at,
+            }
+            # Add features separately since they're objects, not primitive values
+            stage_entity = BlueprintStageEntity(**stage_data)
+            stage_entity.optional_features = entity_features
+            entity_stages.append(stage_entity)
+
+        entity_stages.sort(key=lambda s: s.stage_number)
         return entity_stages
 
     async def _convert_to_entity(self, db_obj: BuildingBlueprintDB) -> Optional[BuildingBlueprintEntity]:
-        """Overrides BaseRepository method to handle nested stages and features."""
-        if db_obj is None:
-            return None
-
-        # Basic conversion for BuildingBlueprint fields (handled by BaseRepository's logic conceptually)
-        # For this override, we do it manually to ensure deep conversion.
-        blueprint_data = {}
-        # Iterate entity fields to decide what to pull from db_obj
-        for f in dataclasses.fields(self.entity_cls):
-            if f.name == 'stages': # Handle stages separately
-                continue
-            if f.name == 'metadata_': # Handle alias
-                 if hasattr(db_obj, '_metadata'):
-                    blueprint_data[f.name] = getattr(db_obj, '_metadata')
-                 continue
-
-            if hasattr(db_obj, f.name):
-                blueprint_data[f.name] = getattr(db_obj, f.name)
-        
-        blueprint_data['entity_id'] = db_obj.id # Ensure BaseEntity's entity_id is set from db_obj.id
-
-        # Convert nested stages and their features
-        if db_obj.stages:
-            blueprint_data['stages'] = await self._convert_db_stages_to_entity_stages(db_obj.stages)
-        else:
-            blueprint_data['stages'] = []
-        
-        try:
-            return self.entity_cls(**blueprint_data)
-        except Exception as e:
-            logging.error(f"Error instantiating BuildingBlueprintEntity from DB data: {e}", exc_info=True)
-            logging.error(f"Data for instantiation: {blueprint_data}")
-            return None
+        """Convert a database model instance to a domain entity."""
+        return await BuildingBlueprintEntity.from_db(db_obj)
 
     async def _entity_to_model_dict(self, entity: BuildingBlueprintEntity, is_new: bool = False) -> Dict[str, Any]:
         """
@@ -90,7 +90,9 @@ class BuildingBlueprintRepository(BaseRepository[BuildingBlueprintEntity, Buildi
         Saving nested stages/features is complex and usually handled by the service layer
         by creating DB model instances for stages/features and associating them.
         """
-        entity_data = dataclasses.asdict(entity)
+        import datetime
+        
+        entity_data = entity.to_dict()
         model_data = {}
 
         for key, value in entity_data.items():
@@ -103,6 +105,15 @@ class BuildingBlueprintRepository(BaseRepository[BuildingBlueprintEntity, Buildi
                  if '_metadata' in self._model_column_keys:
                     model_data['_metadata'] = value
                  continue
+            # Convert ISO format timestamp strings back to datetime objects
+            if key in ['created_at', 'updated_at'] and isinstance(value, str):
+                try:
+                    # Parse ISO format string into datetime object with timezone
+                    model_data[key] = datetime.datetime.fromisoformat(value)
+                except (ValueError, TypeError):
+                    # If parsing fails, use current time
+                    model_data[key] = datetime.datetime.now(datetime.timezone.utc) if 'created_at' == key else None
+                continue
             if key in self._model_column_keys:
                 model_data[key] = value
         
@@ -159,55 +170,51 @@ class BuildingBlueprintRepository(BaseRepository[BuildingBlueprintEntity, Buildi
         return await self._convert_to_entity(db_obj)
 
     async def save_blueprint_with_stages(self, blueprint_entity: BuildingBlueprintEntity) -> BuildingBlueprintEntity:
-        db_blueprint_to_save: Optional[BuildingBlueprintDB] = None # Use a new variable name for clarity
-        
-        if blueprint_entity.entity_id: # UPDATE PATH
+        db_blueprint_to_save: Optional[BuildingBlueprintDB] = None
+
+        if blueprint_entity.entity_id:  # UPDATE PATH
             logging.debug(f"Attempting to fetch existing blueprint for update: {blueprint_entity.entity_id}")
-            db_blueprint_instance = await self.db.get( # Use a different var name to avoid confusion
+            db_blueprint_instance: Optional[BuildingBlueprintDB] = await self.db.get(
                 BuildingBlueprintDB,
                 blueprint_entity.entity_id,
-                options=[ 
+                options=[
                     selectinload(BuildingBlueprintDB.stages).selectinload(BlueprintStageDB.optional_features)
                 ]
             )
 
-            if db_blueprint_instance:
+            if db_blueprint_instance is not None:
                 logging.debug(f"Found existing blueprint {db_blueprint_instance.id} for update.")
                 # Update top-level fields
                 update_data = await self._entity_to_model_dict(blueprint_entity, is_new=False)
                 update_data.pop('id', None); update_data.pop('stages', None)
                 for key, value in update_data.items(): setattr(db_blueprint_instance, key, value)
-                
+
                 # Clear existing stages for "delete and recreate"
-                if db_blueprint_instance.stages: 
-                    logging.debug(f"Deleting {len(db_blueprint_instance.stages)} existing stages for update.")
-                    for stage_to_remove in list(db_blueprint_instance.stages): await self.db.delete(stage_to_remove)
-                    # A flush here is needed to execute the deletes before potentially re-adding
-                    # items with the same natural keys (if stages had unique constraints beyond PK)
-                    # or if new stages might conflict.
+                if db_blueprint_instance.stages:
+                    # Since stages is just a Python list (Mapped[List["BlueprintStage"]]),
+                    # we can work with it directly
+                    stages_to_delete = list(db_blueprint_instance.stages)  # Create a copy of the list to iterate
+                    logging.debug(f"Deleting {len(stages_to_delete)} existing stages")
+                    for stage_to_remove in stages_to_delete:
+                        await self.db.delete(stage_to_remove)
+
                     await self.db.flush()
-                    db_blueprint_instance.stages.clear() # Clear Python collection
-                
-                db_blueprint_to_save = db_blueprint_instance # This is the object we'll add new stages to
+                    # Since it's a list, we can just assign an empty list to clear it
+                    db_blueprint_instance.stages = []
+
+                db_blueprint_to_save = cast(BuildingBlueprintDB, db_blueprint_instance)
             else:
                 logging.warning(f"Blueprint with ID {blueprint_entity.entity_id} for update not found. Will create as new.")
-                # Falls through, db_blueprint_to_save will be None, triggering create logic
 
         if db_blueprint_to_save is None:  # CREATE new blueprint path
             logging.debug(f"Creating new blueprint: {blueprint_entity.name}")
             blueprint_model_data = await self._entity_to_model_dict(blueprint_entity, is_new=True)
-            blueprint_model_data.pop('stages', None) # Remove stages data from parent dict
-            
-            # Create the parent DB object, but DON'T add stages to it yet via kwargs
+            blueprint_model_data.pop('stages', None)  # Remove stages data from parent dict
+
             db_blueprint_to_save = BuildingBlueprintDB(**blueprint_model_data)
-            self.db.add(db_blueprint_to_save) # Add parent to session
-            # DO NOT FLUSH YET. Let's build the whole graph in Python first.
+            self.db.add(db_blueprint_to_save)
 
-        # --- Construct the new stages and features as Python objects ---
-        # These will be associated with db_blueprint_to_save.
-        # The db_blueprint_to_save object is now either a new transient object added to the session,
-        # or an existing persistent object whose stages collection was cleared.
-
+        # Construct new stages and features
         new_stages_for_blueprint = []
         for stage_entity in blueprint_entity.stages:
             db_stage_obj = BlueprintStageDB(
@@ -218,9 +225,8 @@ class BuildingBlueprintRepository(BaseRepository[BuildingBlueprintEntity, Buildi
                 resource_costs=stage_entity.resource_costs,
                 profession_time_bonus=stage_entity.profession_time_bonus,
                 stage_completion_bonuses=stage_entity.stage_completion_bonuses,
-                # building_blueprint_id will be set by relationship assignment/cascade
             )
-            
+
             new_features_for_stage = []
             for feature_entity in stage_entity.optional_features:
                 db_feature = BlueprintStageFeatureDB(
@@ -231,25 +237,24 @@ class BuildingBlueprintRepository(BaseRepository[BuildingBlueprintEntity, Buildi
                     additional_resource_costs=feature_entity.additional_resource_costs,
                     additional_duration_days=feature_entity.additional_duration_days,
                     effects=feature_entity.effects,
-                    # blueprint_stage_id will be set by relationship assignment/cascade
                 )
                 new_features_for_stage.append(db_feature)
-            db_stage_obj.optional_features = new_features_for_stage # Assign features to this stage
-            
+            db_stage_obj.optional_features = new_features_for_stage
+
             new_stages_for_blueprint.append(db_stage_obj)
 
-        # Now, assign the fully constructed list of new stages (with their features)
-        # to the parent blueprint. This leverages SQLAlchemy's collection management and cascades.
+        # Assign new stages to the blueprint
         db_blueprint_to_save.stages = new_stages_for_blueprint
-        
+
         logging.debug(f"All stages and features prepared for blueprint {getattr(db_blueprint_to_save, 'id', 'NEW')}. Flushing session...")
-        await self.db.flush() # Persist parent (if new), all new stages, all new features, and updates to parent.
-                              # This single flush should handle the entire object graph due to cascades.
+        await self.db.flush()
 
         logging.debug(f"Refresh blueprint {db_blueprint_to_save.id} and its children post-save.")
         await self.db.refresh(db_blueprint_to_save, attribute_names=['theme', 'stages'])
-        
+
+        # Check stages after refresh
         if db_blueprint_to_save.stages:
+            # Since stages is a List, we can iterate it directly
             for stage in db_blueprint_to_save.stages:
                 await self.db.refresh(stage, attribute_names=['optional_features'])
         else:

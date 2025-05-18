@@ -1,10 +1,9 @@
 # --- START OF FILE app/game_state/entities/profession_definition_entity.py ---
 
 import uuid
-from dataclasses import dataclass, field, KW_ONLY # <<< Import KW_ONLY
+from dataclasses import field, KW_ONLY, asdict # <<< Import KW_ONLY and asdict
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
-import enum
 
 from .base import BaseEntity # Import the BaseEntity
 
@@ -13,7 +12,6 @@ from .base import BaseEntity # Import the BaseEntity
 # Use kw_only=True for the entire class if ALL fields defined here
 # should be keyword-only (simplest approach)
 # Or use the '_' marker before the first keyword-only field.
-@dataclass #(kw_only=True)
 class ProfessionDefinitionEntity(BaseEntity):
     """
     Domain Entity representing a Profession Definition/Blueprint.
@@ -49,5 +47,37 @@ class ProfessionDefinitionEntity(BaseEntity):
     #         self.updated_at = self.created_at
 
     # Inherits __repr__ from BaseEntity
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """
+        Convert all fields of this entity to a dictionary, including inherited fields.
+        This is used for serialization to JSON or other formats.
+        """
+        # Start with the base entity fields
+        result = super().to_dict()
+        
+        # Add all fields from this entity
+        entity_dict = asdict(self)
+        
+        # Process UUIDs and datetimes for serialization
+        for key, value in entity_dict.items():
+            # Skip entity_id as it's already handled by the base class
+            if key == "entity_id":
+                continue
+                
+            # For UUIDs, convert to string
+            if isinstance(value, uuid.UUID):
+                result[key] = str(value)
+            # For lists of UUIDs, convert each to string
+            elif isinstance(value, list) and value and isinstance(value[0], uuid.UUID):
+                result[key] = [str(item) for item in value]
+            # For datetime, keep as is (it will be serialized to ISO format)
+            elif isinstance(value, datetime):
+                result[key] = value
+            # For everything else, use as is
+            else:
+                result[key] = value
+                
+        return result
 
 # --- END OF FILE app/game_state/entities/profession_definition_entity.py ---

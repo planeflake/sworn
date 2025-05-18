@@ -4,9 +4,9 @@ from app.db.dependencies import get_async_db
 import logging
 from pydantic import BaseModel
 import random
-from app.game_state.models.theme import ThemeEntity
 from app.game_state.services.theme_service import ThemeService
-import uuid
+from app.api.schemas.theme_schema import ThemeRead
+from uuid import UUID
 from typing import Optional, List
 
 class ThemeCreatedResponse(BaseModel):
@@ -16,14 +16,13 @@ class ThemeCreatedResponse(BaseModel):
 
 class ThemeOutputResponse(BaseModel):
     """Response model for Theme output"""
-    theme: List[ThemeEntity]
+    themes: List[ThemeRead]  # Changed field name and used ThemeRead schema
     message: str
 
 router = APIRouter()
 
 @router.post("/", response_model=ThemeCreatedResponse)
 async def create_theme(
-        theme_id: Optional[str] = Body(default=None),
         theme_name: Optional[str] = Body(default=None),
         theme_description: Optional[str] = Body(default=None),
         db: AsyncSession = Depends(get_async_db)
@@ -35,9 +34,6 @@ async def create_theme(
     If Theme_name is not provided, a random test Theme name will be generated.
     """
     try:
-        # Generate UUID at runtime if not provided
-        if theme_id is None:
-            theme_id = str(uuid.uuid4())
             
         # Generate random Theme name if not provided
         if theme_name is None:
@@ -74,10 +70,20 @@ async def list_themes(
     """
     try:
         theme_service = ThemeService(db=db)
-        themes = await theme_service.get_all_themes(skip=skip, limit=limit)
-
+        theme_entities = await theme_service.get_all_themes(skip=skip, limit=limit)
+        
+        # Convert domain entities to read schemas
+        theme_schemas = []
+        for entity in theme_entities:
+            try:
+                schema = await theme_service._convert_entity_to_read_schema(entity)
+                if schema:
+                    theme_schemas.append(schema)
+            except Exception as conv_error:
+                logging.warning(f"Error converting theme entity: {conv_error}")
+                
         return ThemeOutputResponse(
-            theme=themes, 
+            themes=theme_schemas, 
             message="Themes retrieved successfully"
         )
     except Exception as e:
@@ -87,7 +93,7 @@ async def list_themes(
 
 @router.get("/{theme_id}", response_model=ThemeOutputResponse)
 async def get_theme(
-        theme_id: str,
+        theme_id: UUID,
         db: AsyncSession = Depends(get_async_db)
     ):
     """
@@ -97,13 +103,14 @@ async def get_theme(
     """
     try:
         theme_service = ThemeService(db=db)
-        theme = await theme_service.get_by_id(theme_id=theme_id)
+        # get_by_id already returns a ThemeRead object
+        theme_read_schema = await theme_service.get_by_id(theme_id=theme_id)
         
-        if not theme:
+        if not theme_read_schema:
             raise HTTPException(status_code=404, detail="Theme not found.")
         
         return ThemeOutputResponse(
-            theme=theme, 
+            themes=[theme_read_schema],  # Return as a list with one item
             message="Theme retrieved successfully"
         )
     except Exception as e:

@@ -1,0 +1,1 @@
+/Users/oliverga/Documents/personal/sworn/venv/bin/python: Error while finding module specification for 'app.main' (ModuleNotFoundError: No module named 'app')

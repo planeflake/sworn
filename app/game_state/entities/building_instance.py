@@ -4,21 +4,12 @@ import uuid
 from dataclasses import dataclass, field, KW_ONLY
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
-import enum
 
 # --- Project Imports ---
 from .base import BaseEntity # Assuming this is at app/game_state/entities/base.py
 
-# --- Enums for Building Status ---
-class BuildingStatus(enum.Enum):
-    """Status of a constructed building instance."""
-    UNDER_CONSTRUCTION = "UNDER_CONSTRUCTION"
-    ACTIVE = "ACTIVE"            # Operational
-    INACTIVE = "INACTIVE"          # Not operational (e.g., needs power/workers)
-    DAMAGED = "DAMAGED"           # HP below a threshold but not destroyed
-    DESTROYED = "DESTROYED"        # HP at or below 0
-    UPGRADING = "UPGRADING"         # If upgrades take time
-    # PLANNED = "PLANNED"          # Optional: Plot claimed, no resources spent yet
+# Import from the enum module
+from app.game_state.enums.building import BuildingStatus
 
 # --- Domain Entity Definition ---
 @dataclass(kw_only=True)

@@ -1,0 +1,64 @@
+from typing import Dict, List, Optional, Any, Union
+from uuid import UUID
+from app.game_state.entities.base import BaseEntity
+
+class {{ entity_name }}Entity(BaseEntity):
+    """
+    Entity representing a {{ entity_name_readable }}.
+    """
+    def __init__(
+        self,
+        id: Union[UUID, str],
+        {% for field in fields %}
+        {{ field.name }}: {{ field.type_annotation }},
+        {% endfor %}
+        **kwargs
+    ):
+        super().__init__(id)
+        {% for field in fields %}
+        self.{{ field.name }} = {{ field.name }}
+        {% endfor %}
+        {% for relationship in relationships %}
+        {% if relationship.is_collection %}
+        self.{{ relationship.name }} = {{ relationship.name }} or []
+        {% else %}
+        self.{{ relationship.name }} = {{ relationship.name }}
+        {% endif %}
+        {% endfor %}
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert entity to a dictionary representation"""
+        data = {
+            "id": str(self.id),
+            {% for field in fields %}
+            "{{ field.name }}": {% if field.is_uuid %}str(self.{{ field.name }}) if self.{{ field.name }} else None{% else %}self.{{ field.name }}{% endif %},
+            {% endfor %}
+            {% for relationship in relationships %}
+            {% if relationship.is_collection %}
+            "{{ relationship.name }}": [item.to_dict() if hasattr(item, 'to_dict') else item for item in self.{{ relationship.name }}],
+            {% else %}
+            "{{ relationship.name }}": self.{{ relationship.name }}.to_dict() if hasattr(self.{{ relationship.name }}, 'to_dict') and self.{{ relationship.name }} else self.{{ relationship.name }},
+            {% endif %}
+            {% endfor %}
+        }
+        return data
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "{{ entity_name }}Entity":
+        """Create entity from dictionary data"""
+        {% for field in fields %}
+        {% if field.is_uuid %}
+        {{ field.name }} = UUID(data["{{ field.name }}"]) if data.get("{{ field.name }}") else None
+        {% else %}
+        {{ field.name }} = data.get("{{ field.name }}")
+        {% endif %}
+        {% endfor %}
+        
+        return cls(
+            id=data["id"],
+            {% for field in fields %}
+            {{ field.name }}={{ field.name }},
+            {% endfor %}
+        )

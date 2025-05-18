@@ -13,8 +13,6 @@ from app.game_state.entities.resource import ResourceEntity
 # Import Enums if needed for specific queries (less common here)
 # from app.game_state.enums.shared import StatusEnum
 
-
-# Define type hints for BaseRepository
 # BaseRepository[DomainEntityType, DbModelType, PrimaryKeyType]
 class ResourceRepository(BaseRepository[ResourceEntity, ResourceDbModel, UUID]):
     """

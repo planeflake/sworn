@@ -1,19 +1,13 @@
 # --- START OF FILE app/game_state/entities/skill.py ---
 
 import uuid
-import enum
+
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 
 from .base import BaseEntity
-
-# Define skill-specific enum
-class SkillStatus(enum.Enum):
-    LOCKED = "LOCKED"
-    AVAILABLE = "AVAILABLE"
-    LEARNING = "LEARNING"
-    MASTERED = "MASTERED"
+from app.game_state.enums.skill import SkillStatus
 
 @dataclass
 class SkillEntity(BaseEntity):
@@ -24,8 +18,6 @@ class SkillEntity(BaseEntity):
     # Skill attributes
     level: int = 0
     max_level: int = 100
-    experience: int = 0
-    experience_to_next_level: int = 100
     status: SkillStatus = SkillStatus.LOCKED
     
     # Description and metadata
@@ -36,7 +28,6 @@ class SkillEntity(BaseEntity):
     # Timestamps
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: Optional[datetime] = None
-    unlocked_at: Optional[datetime] = None
     
     # Additional metadata
     tags: List[str] = field(default_factory=list)
@@ -49,8 +40,6 @@ class SkillEntity(BaseEntity):
         """Initialize fields as needed."""
         if self.updated_at is None:
             self.updated_at = self.created_at
-            
-        if self.status != SkillStatus.LOCKED and self.unlocked_at is None:
-            self.unlocked_at = self.created_at
+
 
 # --- END OF FILE app/game_state/entities/skill.py ---

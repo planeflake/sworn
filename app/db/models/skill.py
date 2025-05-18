@@ -2,10 +2,10 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 
 from sqlalchemy import (
-    Integer, String, Text, DateTime, func, Table, Column, ForeignKey, text
+    Integer, String, Text, DateTime, func, text
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
@@ -51,7 +51,9 @@ class Skill(Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False, index=True, unique=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     max_level: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=100, server_default='100')
-
+    category: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    icon_path: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    status: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     # Relationship to Characters who have learned this skill
     characters_with_skill: Mapped[List["Character"]] = relationship( # Renamed for clarity
         "Character",

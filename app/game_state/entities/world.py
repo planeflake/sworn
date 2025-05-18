@@ -1,5 +1,5 @@
 # --- START OF FILE app/game_state/entities/world.py ---
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 from typing import Optional, List, Any, Dict
 from datetime import datetime

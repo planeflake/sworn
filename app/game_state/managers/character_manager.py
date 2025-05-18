@@ -4,7 +4,7 @@ from app.game_state.entities.character import CharacterEntity
 from typing import Optional
 from uuid import UUID,uuid4
 from app.game_state.enums.shared import RarityEnum, StatusEnum
-from app.game_state.enums.character import CharacterTypeEnum
+from app.game_state.enums.character import CharacterTypeEnum, CharacterTraitEnum
 from app.game_state.entities.resource import ResourceEntity
 import logging
 
@@ -24,6 +24,7 @@ class CharacterManager:
         description: Optional[str] = None,
         world_id: UUID = None,
         character_type: CharacterTypeEnum = None,
+        traits: list[CharacterTraitEnum] = None,
     ) -> CharacterEntity:
         """
         Creates a new transient (in-memory) CharacterEntity.
@@ -43,10 +44,14 @@ class CharacterManager:
         Raises:
             ValueError: If validation fails (e.g., invalid name).
         """
-        logging.info(f"Creating transient CharacterEntity: id={id}, name='{name}, description='{description}', world_id={world_id}, character_type={character_type}")
+        logging.info(f"Creating transient CharacterEntity: id={id}, name='{name}, description='{description}', world_id={world_id}, character_type={character_type}, traits={traits}")
 
         # --- Domain Validation Example ---
         # Add more validation based on game rules...
+        
+        # Initialize traits to empty list if None
+        if traits is None:
+            traits = []
 
         # Create the entity using keyword arguments for clarity
         # after the required positional resource_id
@@ -56,6 +61,7 @@ class CharacterManager:
             description=description,
             world_id=world_id,
             character_type=character_type,
+            traits=traits,
             #status=status,
             # created_at/updated_at are typically handled by persistence layer
         )

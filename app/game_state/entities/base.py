@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field, KW_ONLY
+from dataclasses import dataclass, field
 from uuid import UUID, uuid4
 from typing import Any
 
@@ -8,7 +8,7 @@ class BaseEntity:
     Base class for all domain entities in the game state.
     Provides common fields like entity_id and name.
     """
-
+    # Keep defaults to maintain current behavior
     entity_id: UUID = field(default_factory=uuid4)
     name: str = "Unnamed Entity"
 

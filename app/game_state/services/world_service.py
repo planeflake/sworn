@@ -8,7 +8,7 @@ from typing import List, Optional
 from app.game_state.entities.world import WorldEntity
 
 # API Schemas
-from app.api.schemas.world import WorldRead, WorldCreate, WorldUpdate
+from app.api.schemas.world import WorldRead, WorldUpdate, WorldCreateRequest
 
 # Repositories and other Services
 from app.game_state.repositories.world_repository import WorldRepository
@@ -57,7 +57,7 @@ class WorldService:
                 result.append(schema)
         return result
 
-    async def create_world(self, world_data: WorldCreate) -> WorldRead:
+    async def create_world(self, world_data: WorldCreateRequest) -> WorldRead:
         """
         Create a new world. Checks for theme existence. Returns API Schema.
         Raises ValueError if theme not found or creation fails.
@@ -180,7 +180,7 @@ class WorldService:
             saved_domain_entity = await self.repository.save(updated_domain_entity)
             logging.info(f"[WorldService] advance_day finished for {world_id}. New day: {saved_domain_entity.day}")
         except Exception as e:
-            logging.exception(f"Error saving world {world_id} after advancing day.")
+            logging.exception(f"Error saving world {world_id} after advancing day. {e}")
             return None
 
         # Convert the saved DOMAIN entity to API Schema
@@ -221,7 +221,7 @@ class WorldService:
             raise ValueError(error_msg)
 
         # Modify and save
-        saved_domain_entity = None
+        #saved_domain_entity = None
         try:
             # Check if update is needed
             if world_domain_entity.theme_id == theme_id:

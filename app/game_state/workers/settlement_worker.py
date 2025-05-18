@@ -1,13 +1,14 @@
 # app/game_state/workers/settlement_worker.py
 import logging
 from typing import Optional, Dict, Any
-import asyncio
 import uuid
+from uuid import UUID
 
 from app.core.celery_app import app
 from app.db.async_session import get_db_session
 from app.game_state.services.settlement_service import SettlementService
-from app.game_state.models.settlement import SettlementEntity
+#from app.api.schemas.settlement import SettlementBase
+from app.api.schemas.settlement import SettlementRead
 from app.game_state.workers.worker_utils import with_task_lock, run_async_task
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -22,7 +23,7 @@ def expand_settlement(world_id=None, task_id=None):
     # Run the async implementation using the utility function
     return run_async_task(_expand_settlement_async, world_id, task_id)
 
-async def expand_settlement_async(settlement_id: str) -> SettlementEntity:
+async def expand_settlement_async(settlement_id: UUID) -> SettlementRead:
     """
     Asynchronous function to expand a settlement.
     """
@@ -60,11 +61,11 @@ async def _expand_settlement_async(world_id: Optional[uuid], task_id: str) -> Di
         settlement_service = SettlementService(db=session)
         from app.game_state.services.building_evaluation_service import BuildingEvaluationService
         building_evaluation_service = BuildingEvaluationService(db=session)
-        from app.game_state.services.building_instance_service import BuildingInstanceService
-        building_service = BuildingInstanceService(db=session)
+        #from app.game_state.services.building_instance_service import BuildingInstanceService
+        #building_service = BuildingInstanceService(db=session)
         
         # Get settlements to process
-        settlements = []
+        #settlements = []
         if world_id:
             # Get settlements in specific world
             settlements = await settlement_service.get_settlements_by_world(world_id)

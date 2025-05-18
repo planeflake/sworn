@@ -2,14 +2,18 @@
 
 from sqlalchemy import Integer, String, DateTime, func, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as pgUUID
+from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.dialects.postgresql import JSONB
 from app.db.models.building_instance import BuildingInstanceDB
 from sqlalchemy.sql import text
 from .base import Base
 import uuid
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, TYPE_CHECKING
+
+# Avoid circular imports by using TYPE_CHECKING
+if TYPE_CHECKING:
+    from .character import Character
 
 class Settlement(Base):
     """Settlement model for SQLAlchemy ORM"""
@@ -18,17 +22,23 @@ class Settlement(Base):
     # --- Fields REQUIRED in Python __init__ (Non-Defaults first) ---
     # Foreign Key to worlds table (No Python default, required)
     world_id: Mapped[uuid.UUID] = mapped_column(
-        pgUUID(as_uuid=True),
+        pg.UUID(as_uuid=True),
         ForeignKey("worlds.id"),
         nullable=False
         # init=True is default, so keep it in __init__
+    )
+
+    zone_id: Mapped[uuid.UUID] = mapped_column(
+        pg.UUID(as_uuid=True),
+        ForeignKey("zones.id",name="fk_settlement_zone_id"),
+        nullable=False
     )
 
     # --- Fields OPTIONAL/PROVIDED in Python __init__ (Defaults available) ---
     # Primary Key (Has default, but you provide it)
     entity_id: Mapped[uuid.UUID] = mapped_column(
         "id",  # <<< Explicitly state the DB column name is "id"
-        pgUUID(as_uuid=True),
+        pg.UUID(as_uuid=True),
         primary_key=True,
         server_default=text("gen_random_uuid()"),
         # init=True is default, keep it required for Python init
@@ -57,9 +67,16 @@ class Settlement(Base):
     )
 
     leader_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        pgUUID(as_uuid=True),
+        pg.UUID(as_uuid=True),
         ForeignKey("characters.id"),
         nullable=True
+    )
+
+    # Relationship to the character who is the leader
+    leader: Mapped[Optional["Character"]] = relationship(
+        "Character",
+        foreign_keys=[leader_id],
+        lazy="selectin"
     )
 
     building_instances: Mapped[List["BuildingInstanceDB"]] = relationship(

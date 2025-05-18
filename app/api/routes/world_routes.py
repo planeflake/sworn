@@ -4,47 +4,30 @@ from fastapi import APIRouter, Depends, HTTPException, Body, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.dependencies import get_async_db
 import logging
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 import random
-from app.game_state.models.world import WorldEntity as WorldApiModel
+from app.api.schemas.world import  WorldBase, WorldCreateRequest
 from app.game_state.services.world_service import WorldService
 # Import ThemeService if needed for separate theme endpoints (but not directly for world creation now)
 # from app.game_state.services.theme_service import ThemeService
-import uuid
 from uuid import UUID
-from typing import Optional, List
+from typing import List, Optional
 from fastapi import Query
 
-# --- Request Models ---
-class WorldCreateRequest(BaseModel):
-    name: str = Field(None, description="Desired name for the world (optional, random if None)", max_length=50)
-    size: int = Field(1000, description="Size indicator for the world (optional)", ge=0)
-    theme_id: UUID = Field(..., description="The required ID of the theme to assign to the new world")
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "name": "random_world",
-                    "theme_id": "dfba10ac-eaa7-4f83-977d-def25746dfb5"
-                }
-            ]
-        }
-    }
 
 # --- Response Models ---
 class WorldResponse(BaseModel):
     """Standard response containing a world API model"""
-    world: WorldApiModel
+    world: WorldBase
 
 class WorldCreatedResponse(BaseModel):
     """Specific response for successful world creation"""
     message: str
-    world: WorldApiModel
+    world: WorldBase
 
 class AssignThemeResponse(BaseModel):
      message: str
-     world: WorldApiModel # Include the updated world details
+     world: WorldBase # Include the updated world details
 
 router = APIRouter()
 
@@ -61,7 +44,7 @@ async def create_world_endpoint( # Renamed for clarity
     ):
     """Endpoint to create a new world."""
 
-    logging.info(f"[WorldRoutes] Request to create world with data: {world_data.json()}")
+    logging.info(f"[WorldRoutes] Request to create world with data: {world_data.model_dump()}")
 
     try:
         world_name = world_data.name
@@ -71,16 +54,21 @@ async def create_world_endpoint( # Renamed for clarity
 
         world_service = WorldService(db=db) # Instantiate the service (or use dependency injection if needed)
 
+
+
         # Call service method - it handles theme check and creation
         created_world_api_model = await world_service.create_world(
-            name=world_name,
-            theme_id=world_data.theme_id
+            world_data=world_data
         )
 
         # Service now raises specific errors or returns the model
+        # Ensure the world ID is included in the response
+        world_id = getattr(created_world_api_model, 'id', None)
+        
         return WorldCreatedResponse(
             message="World created successfully",
-            world=created_world_api_model
+            world=created_world_api_model,
+            id=world_id  # Add the ID to the response
         )
     # Catch specific errors raised by the service
     except ValueError as ve:
@@ -167,7 +155,7 @@ async def get_world_endpoint(
 
 @router.get(
     "/", # Path relative to /worlds
-    response_model=List[WorldApiModel],
+    response_model=List[WorldBase],
     summary="List Worlds",
     description="Retrieves a list of all worlds, with optional pagination."
     )
@@ -178,7 +166,7 @@ async def get_all_worlds_endpoint(
     ):
     """Endpoint to get a list of worlds."""
     # Need to import Query from fastapi
-    from fastapi import Query
+    #from fastapi import Query
     world_service = WorldService(db=db) # Instantiate the service (or use dependency injection if needed)
 
     worlds_api_models = await world_service.get_all_worlds(skip=skip, limit=limit)

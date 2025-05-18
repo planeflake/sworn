@@ -1,0 +1,37 @@
+from typing import List, Optional, Dict, Any, Union
+from uuid import UUID
+from pydantic import BaseModel, Field
+
+class {{ entity_name }}Base(BaseModel):
+    """Base schema for {{ entity_name_readable }}"""
+    {% for field in fields %}
+    {% if field.name != 'id' %}
+    {{ field.name }}: {{ field.type_annotation }}{% if not field.required %} = None{% endif %}{% if field.description %} = Field(description="{{ field.description }}"){% endif %}
+    {% endif %}
+    {% endfor %}
+
+class {{ entity_name }}Create({{ entity_name }}Base):
+    """Schema for creating a {{ entity_name_readable }}"""
+    pass
+
+class {{ entity_name }}Update(BaseModel):
+    """Schema for updating a {{ entity_name_readable }}"""
+    {% for field in fields %}
+    {% if field.name != 'id' %}
+    {{ field.name }}: Optional[{{ field.type_annotation }}] = None{% if field.description %} = Field(description="{{ field.description }}"){% endif %}
+    {% endif %}
+    {% endfor %}
+
+class {{ entity_name }}Read({{ entity_name }}Base):
+    """Schema for reading a {{ entity_name_readable }}"""
+    id: UUID = Field(description="Unique identifier")
+    {% for relationship in relationships %}
+    {% if relationship.is_collection %}
+    {{ relationship.name }}: List[Dict[str, Any]] = Field(default=[], description="{{ relationship.description }}")
+    {% else %}
+    {{ relationship.name }}: Optional[Dict[str, Any]] = Field(default=None, description="{{ relationship.description }}")
+    {% endif %}
+    {% endfor %}
+    
+    class Config:
+        from_attributes = True

@@ -1,0 +1,168 @@
+import argparse
+import sys
+import logging
+from pathlib import Path
+
+from app.tools.generators.model_analyzer import analyze_model
+from app.tools.generators.code_generator import generate_code
+from app.tools.generators.config import GeneratorConfig
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger("domain-entity-generator")
+
+def configure_parser() -> argparse.ArgumentParser:
+    """Configure the argument parser for the domain entity generator CLI"""
+    parser = argparse.ArgumentParser(
+        description="Generate domain entities and related components from SQLAlchemy models"
+    )
+    
+    parser.add_argument(
+        "model_class",
+        help="SQLAlchemy model class name to generate from (e.g. 'World')"
+    )
+    
+    parser.add_argument(
+        "--model-module",
+        dest="model_module",
+        default=None,
+        help="Python module path to the model (e.g. 'app.db.models.world')"
+    )
+    
+    parser.add_argument(
+        "-o", 
+        "--output-dir",
+        dest="output_dir",
+        default=None,
+        help="Output directory for generated files (default: project root)"
+    )
+    
+    parser.add_argument(
+        "--entity",
+        action="store_true",
+        default=True,
+        help="Generate domain entity (default: True)"
+    )
+    
+    parser.add_argument(
+        "--repository",
+        action="store_true",
+        default=True,
+        help="Generate repository (default: True)"
+    )
+    
+    parser.add_argument(
+        "--manager",
+        action="store_true",
+        default=True,
+        help="Generate manager (default: True)"
+    )
+    
+    parser.add_argument(
+        "--service",
+        action="store_true",
+        default=True,
+        help="Generate service (default: True)"
+    )
+    
+    parser.add_argument(
+        "--api-schema",
+        action="store_true",
+        default=True,
+        help="Generate API schema (default: True)"
+    )
+    
+    parser.add_argument(
+        "--api-routes",
+        action="store_true",
+        default=True,
+        help="Generate API routes (default: True)"
+    )
+    
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        default=False,
+        help="Overwrite existing files (default: False)"
+    )
+    
+    parser.add_argument(
+        "--api-prefix",
+        dest="api_prefix",
+        default=None,
+        help="API route prefix (default: pluralized snake_case of entity name)"
+    )
+    
+    parser.add_argument(
+        "--api-tag",
+        dest="api_tag",
+        default=None,
+        help="API tag for documentation (default: entity name)"
+    )
+    
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        default=False,
+        help="Verbose output (default: False)"
+    )
+    
+    return parser
+
+def main():
+    """Main entry point for the CLI application"""
+    parser = configure_parser()
+    args = parser.parse_args()
+    
+    # Set logging level based on verbosity
+    if args.verbose:
+        logger.setLevel(logging.DEBUG)
+    
+    try:
+        # Configure generator
+        config = GeneratorConfig(
+            model_class_name=args.model_class,
+            model_module=args.model_module,
+            output_dir=args.output_dir,
+            generate_entity=args.entity,
+            generate_repository=args.repository,
+            generate_manager=args.manager,
+            generate_service=args.service,
+            generate_api_schema=args.api_schema,
+            generate_api_routes=args.api_routes,
+            force_overwrite=args.force,
+            api_route_prefix=args.api_prefix,
+            api_tag=args.api_tag
+        )
+        
+        # Log configuration
+        logger.debug(f"Generator configuration: {vars(config)}")
+        
+        # Analyze model
+        logger.info(f"Analyzing model: {args.model_class}")
+        model_info = analyze_model(config)
+        
+        # Generate code
+        logger.info("Generating code...")
+        generated_files = generate_code(model_info, config)
+        
+        # Log results
+        logger.info(f"Generated {len(generated_files)} files:")
+        for file_path in generated_files:
+            logger.info(f"  - {file_path}")
+        
+        logger.info("Domain entity generation complete!")
+        return 0
+        
+    except Exception as e:
+        logger.error(f"Error generating domain entity: {str(e)}")
+        if args.verbose:
+            import traceback
+            logger.error(traceback.format_exc())
+        return 1
+
+if __name__ == "__main__":
+    sys.exit(main())

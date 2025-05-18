@@ -2,37 +2,32 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional, List # Added List
+from typing import Optional #, #TYPE_CHECKING
 
 from sqlalchemy import String, Text, DateTime, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as pgUUID
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.dialects import postgresql as pg
 
 from .base import Base
+#from app.db.models.celestial_events import celestial_event_themes  # <-- Import the association table
 
-# TYPE CHECKING IMPORTS
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from .building_blueprint import BuildingBlueprint # For the back_populates
+# Import CelestialEventDB only for type checking to satisfy PyCharm
+#if TYPE_CHECKING:
+    #from app.db.models.celestial_events import CelestialEventDB
 
-class Theme(Base):
+
+class ThemeDB(Base):
     __tablename__ = 'themes'
 
-    id: Mapped[uuid.UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(pg.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
 
-    # Relationship to BuildingBlueprints
-    building_blueprints: Mapped[List["BuildingBlueprint"]] = relationship(
-        "BuildingBlueprint",
-        back_populates="theme", # Matches 'theme' in BuildingBlueprint model
-        cascade="all, delete-orphan" # Optional: if deleting a theme deletes its blueprints
-    )
 
     def __repr__(self) -> str:
-        return f"<Theme(id={self.id!r}, name={self.name!r})>"
+        return f"<ThemeDB(id={self.id!r}, name={self.name!r})>"
 
 # --- END OF FILE app/db/models/theme.py ---

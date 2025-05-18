@@ -2,11 +2,11 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional, Dict
 
 from sqlalchemy import String, Text, DateTime, Float, Integer, JSON, func
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy.dialects.postgresql import UUID as pgUUID
+from sqlalchemy.dialects import postgresql as pg
 
 from .base import Base
 
@@ -17,7 +17,7 @@ class Biome(Base):
     """
     __tablename__ = 'biomes'
 
-    id: Mapped[uuid.UUID] = mapped_column(pgUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(pg.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     biome_id: Mapped[str] = mapped_column(String(50), nullable=False, unique=True, comment="Unique string identifier for the biome")
     name: Mapped[str] = mapped_column(String(100), nullable=False, comment="Display name of the biome")
     display_name: Mapped[str] = mapped_column(String(100), nullable=False, comment="User-friendly display name")

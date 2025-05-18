@@ -12,7 +12,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as pgUUID, JSONB, ARRAY
 
 from .base import Base
-from app.game_state.entities.building_instance import BuildingStatus # Import your domain enum
+from app.game_state.enums.building import BuildingStatus # Import from proper enum location
 from app.game_state.entities.character import CharacterEntity # Assuming this is the correct path
 
 from typing import TYPE_CHECKING

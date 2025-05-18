@@ -5,7 +5,7 @@ from uuid import UUID
 from typing import Optional
 import logging
 
-from app.db.models.theme import Theme as ThemeModel # DB Model
+from app.db.models.theme import ThemeDB as ThemeModel # DB Model
 from app.game_state.entities.theme import ThemeEntity # Domain Entity
 from app.game_state.repositories.base_repository import BaseRepository
 

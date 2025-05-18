@@ -1,7 +1,7 @@
-from dataclasses import dataclass, field, KW_ONLY, asdict
+from dataclasses import dataclass, field, KW_ONLY
 from uuid import UUID
 from datetime import datetime, UTC
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, Any
 
 from app.game_state.entities.base import BaseEntity
 

@@ -2,7 +2,7 @@
 
 import logging
 from uuid import UUID
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Body, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -34,18 +34,36 @@ create_skill_example = {
     }
 }
 
-@router.post(
-    "/",
-    response_model=SkillDefinitionRead,
-    status_code=status.HTTP_201_CREATED,
-    summary="Create Skill Definition",
-)
+@router.post("/skill-definitions", response_model=SkillDefinitionRead, status_code=status.HTTP_201_CREATED)
 async def create_skill_definition(
-    skill_in: SkillDefinitionCreate = Body(..., examples={"mining": create_skill_example}),
+    skill_in: SkillDefinitionCreate,
     db: AsyncSession = Depends(get_async_db),
 ):
     """
-    Creates a new skill definition. Requires a unique 'name'.
+    Create a new skill definition.
+
+    This endpoint creates a new entry in the skill definition registry using
+    the provided `SkillDefinitionCreate` schema. Each skill must have a unique `name`.
+
+    Parameters:
+    ----------
+    - skill_in (SkillDefinitionCreate): The input data for the skill definition, including name, description, and any other required fields.
+    - db (AsyncSession): SQLAlchemy async database session dependency, injected automatically.
+
+    Returns:
+    -------
+    - SkillDefinitionRead: A representation of the newly created skill definition including its ID and other persisted fields.
+
+    Raises:
+    -------
+    - HTTPException (400): If the input validation fails or a skill with the same name already exists.
+    - HTTPException (500): If an unexpected server-side error occurs during creation.
+
+    Example Request Body:
+    {
+        "name": "blacksmithing",
+        "description": "The ability to forge and shape metal items."
+    }
     """
     service = SkillDefinitionService(db)
     try:
@@ -53,10 +71,17 @@ async def create_skill_definition(
         return created_skill_def
     except ValueError as e:
         logging.warning(f"Validation error creating skill definition: {e}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except Exception as e:
         logging.exception(f"Unexpected error creating skill definition: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal server error.")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error."
+        )
+
 
 @router.get(
     "/",

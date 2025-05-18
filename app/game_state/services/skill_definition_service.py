@@ -4,7 +4,7 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from typing import List, Optional
-import dataclasses
+from datetime import datetime, timezone
 
 from app.game_state.repositories.skill_definition_repository import SkillDefinitionRepository
 from app.game_state.entities.skill_definition_entity import SkillDefinitionEntity
@@ -21,19 +21,33 @@ class SkillDefinitionService:
         self.db = db
         self.repository = SkillDefinitionRepository(db=self.db)
 
+    @staticmethod
     async def _convert_entity_to_read_schema(
-        self, entity: Optional[SkillDefinitionEntity]
+        entity: Optional[SkillDefinitionEntity]
     ) -> Optional[SkillDefinitionRead]:
         """Converts domain entity to Pydantic Read schema."""
         if entity is None:
             return None
         try:
-            entity_dict = dataclasses.asdict(entity)
-            if 'entity_id' in entity_dict and 'id' not in entity_dict:
-                 entity_dict['id'] = entity_dict.pop('entity_id')
+            # Build a complete dictionary with fallbacks for required fields
+            entity_dict = {
+                'id': str(entity.entity_id),
+                'name': entity.name,
+                'description': getattr(entity, 'description', None),
+                'max_level': getattr(entity, 'max_level', 100),
+                'themes': getattr(entity, 'themes', []),
+                'metadata': getattr(entity, 'metadata', {}),
+                'created_at': getattr(entity, 'created_at', datetime.now(timezone.utc)),
+                'updated_at': getattr(entity, 'updated_at', None)
+            }
+            
+            # Explicitly log the dictionary to help debug
+            logging.debug(f"Entity dict for schema validation: {entity_dict}")
+            
             return SkillDefinitionRead.model_validate(entity_dict)
         except Exception as e:
             logging.error(f"Failed to convert SkillDefinitionEntity to Read schema: {e}", exc_info=True)
+            logging.error(f"Entity data: {entity}")
             raise ValueError("Internal error converting skill definition data.") from e
 
     async def create_skill_definition(

@@ -4,19 +4,7 @@ from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
 from datetime import datetime
 from enum import Enum
-
-
-class RarityEnum(str, Enum):
-    COMMON = "common"
-    UNCOMMON = "uncommon"
-    RARE = "rare"
-    EPIC = "epic"
-    LEGENDARY = "legendary"
-
-class StatusEnum(str, Enum):
-    ACTIVE = "active"
-    INACTIVE = "inactive"
-    DEPRECATED = "deprecated"
+from app.game_state.enums.shared import RarityEnum, StatusEnum
 
 class ResourceBase(BaseModel):
     """Base schema for common resource attributes."""
@@ -47,7 +35,7 @@ class ResourceRead(ResourceBase):
     Pydantic Schema for reading/returning a Resource.
     This defines the structure of a Resource object when sent via the API.
     """
-    id: uuid.UUID
+    resource_id: uuid.UUID
     theme_id: Optional[uuid.UUID] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
@@ -59,12 +47,12 @@ class ResourceRead(ResourceBase):
         "from_attributes": True,
         "json_schema_extra": {
             "example": {
-                "id": "dfba10ac-eaa7-4f83-977d-def25746dfb5",
+                "resource_id": "dfba10ac-eaa7-4f83-977d-def25746dfb5",
                 "name": "Iron Ore",
                 "description": "Raw iron ore extracted from mines.",
                 "stack_size": 50,
-                "rarity": "common",
-                "status": "active",
+                "rarity": "Common",
+                "status": "Active",
                 "theme_id": "5d937fc9-b4c7-4cc7-b6af-318c2fa6c73c",
                 "created_at": "2023-10-27T10:00:00Z",
                 "updated_at": "2023-10-28T12:30:00Z",

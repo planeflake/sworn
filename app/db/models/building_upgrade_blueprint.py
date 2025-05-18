@@ -1,12 +1,12 @@
 # --- START OF FILE app/db/models/building_upgrade_blueprint.py ---
 import uuid
 from datetime import datetime
-from typing import Optional, List, Dict, Any # Keep Any for flexibility in JSON
+from typing import Optional, Dict, Any
 
 from sqlalchemy import (
-    Integer, String, Text, ForeignKey, UniqueConstraint, Index, func, text, DateTime, Boolean
+    Integer, String, Text, Index, func, text, DateTime, Boolean
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID as pgUUID, JSONB
 
 from .base import Base

@@ -32,6 +32,11 @@ class ResourceService:
         try:
             # Use the entity's to_dict method to get a dictionary representation
             entity_dict = entity.to_dict()
+            
+            # Make sure we're using resource_id, not id
+            if 'id' in entity_dict and 'resource_id' not in entity_dict:
+                entity_dict['resource_id'] = entity_dict.pop('id')
+                
             # Validate with ResourceRead model
             return ResourceRead.model_validate(entity_dict)
         except Exception as e:

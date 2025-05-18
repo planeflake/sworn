@@ -1,7 +1,6 @@
 # --- START OF FILE app/db/models/character.py ---
 
 import uuid
-import enum
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 
@@ -9,7 +8,7 @@ from sqlalchemy import (
     Integer, String, DateTime, func, ForeignKey, Boolean, Enum as SQLAlchemyEnum, Text, Table, Column
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as pgUUID, JSONB
+from sqlalchemy.dialects import postgresql as pg # UUID as pgUUID, JSONB
 from sqlalchemy.sql import text
 
 from .base import Base
@@ -22,7 +21,7 @@ if TYPE_CHECKING:
     from .location import Location
     from .skill import Skill
     # from .player_account import PlayerAccount # If you create this model
-    from .building_instance import BuildingInstanceDB # <<< ADD THIS IMPORT
+    from .building_instance import BuildingInstanceDB
 
 # --- Association Table for Character <-> Skill (Many-to-Many) ---
 # This needs to be defined where both Character and Skill can see it,
@@ -30,8 +29,8 @@ if TYPE_CHECKING:
 character_skills_association = Table(
     "character_skills",
     Base.metadata,
-    Column("character_id", pgUUID(as_uuid=True), ForeignKey("characters.id", ondelete="CASCADE"), primary_key=True),
-    Column("skill_id", pgUUID(as_uuid=True), ForeignKey("skills.id", ondelete="CASCADE"), primary_key=True), # Assumes skills.id is UUID
+    Column("character_id", pg.UUID(as_uuid=True), ForeignKey("characters.id", ondelete="CASCADE"), primary_key=True),
+    Column("skill_id", pg.UUID(as_uuid=True), ForeignKey("skills.id", ondelete="CASCADE"), primary_key=True), # Assumes skills.id is UUID
     Column("level", Integer, nullable=False, default=1, server_default='1'),
     Column("xp", Integer, nullable=False, default=0, server_default='0')
 )
@@ -43,7 +42,7 @@ class Character(Base):
     __tablename__ = 'characters'
 
     id: Mapped[uuid.UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+        pg.UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
     character_type: Mapped[CharacterTypeEnum] = mapped_column(
@@ -51,8 +50,8 @@ class Character(Base):
         nullable=False, index=True
     )
     character_traits: Mapped[List[CharacterTraitEnum]] = mapped_column(
-        SQLAlchemyEnum(CharacterTraitEnum, name="character_trait_enum", create_type=False),
-        nullable=True, default=lambda: [], index=True
+        pg.ARRAY(SQLAlchemyEnum(CharacterTraitEnum, name="character_trait_enum", create_type=False)),
+        nullable=True, default=lambda: [], server_default="{}"
     )
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     level: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default='1')
@@ -61,11 +60,11 @@ class Character(Base):
         SQLAlchemyEnum(CharacterStatusEnum, name="character_status_enum", create_type=False),
         nullable=False, default=CharacterStatusEnum.ALIVE
     )
-    stats: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True, default=lambda: {})
-    equipment: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True, default=lambda: {})
+    stats: Mapped[Optional[Dict[str, Any]]] = mapped_column(pg.JSONB, nullable=True, default=lambda: {})
+    equipment: Mapped[Optional[Dict[str, Any]]] = mapped_column(pg.JSONB, nullable=True, default=lambda: {})
 
     world_id: Mapped[uuid.UUID] = mapped_column(
-        pgUUID(as_uuid=True),
+        pg.UUID(as_uuid=True),
         ForeignKey("worlds.id", name="fk_character_world_id"),
         nullable=False, # Assuming a character must belong to a world
         index=True
@@ -86,7 +85,7 @@ class Character(Base):
     #    nullable=True, unique=True, index=True
     #)
     current_location_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-       pgUUID(as_uuid=True),
+       pg.UUID(as_uuid=True),
        ForeignKey("locations.id", name="fk_char_location_id", ondelete="SET NULL"), # Assuming locations table
        nullable=True,
        index=True
@@ -94,13 +93,13 @@ class Character(Base):
 
     # --- BUILDING ASSIGNMENT FOREIGN KEYS ---
     current_building_home_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        pgUUID(as_uuid=True),
+        pg.UUID(as_uuid=True),
         ForeignKey("building_instances.id", name="fk_char_home_building_id", ondelete="SET NULL"),
         nullable=True,
         index=True
     )
     current_building_workplace_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        pgUUID(as_uuid=True),
+        pg.UUID(as_uuid=True),
         ForeignKey("building_instances.id", name="fk_char_work_building_id", ondelete="SET NULL"),
         nullable=True,
         index=True
@@ -115,7 +114,6 @@ class Character(Base):
         lazy="selectin",
         cascade="all, delete-orphan"
     )
-
 
     current_location: Mapped[Optional["Location"]] = relationship(
        "Location",

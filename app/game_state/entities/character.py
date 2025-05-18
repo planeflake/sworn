@@ -5,9 +5,8 @@ from typing import Optional, List
 from datetime import datetime
 from uuid import UUID, uuid4
 
-# --- Import Enums (Ideally from domain/shared location, but DB model path used for now) ---
-# Consider moving enums like CharacterTypeEnum to app/game_state/enums.py
-from app.db.models.character import CharacterTypeEnum, CharacterStatusEnum, CharacterTraitEnum
+# --- Import Enums from the proper location ---
+from app.game_state.enums.character import CharacterTypeEnum, CharacterStatusEnum, CharacterTraitEnum
 
 # --- Import OTHER DOMAIN ENTITIES ---
 # These should point to files within app/game_state/entities/

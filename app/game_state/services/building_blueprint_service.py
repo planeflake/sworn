@@ -30,8 +30,26 @@ class BuildingBlueprintService:
             return None
         
         try:
-            # Convert the entire entity hierarchy to a dict structure
-            entity_dict_raw = dataclasses.asdict(entity)
+            # Check if entity is a dataclass and use asdict, or manually create dict
+            if dataclasses.is_dataclass(entity):
+                entity_dict_raw = dataclasses.asdict(entity)
+            else:
+                # Use the to_dict method or create a dict manually
+                if hasattr(entity, 'to_dict'):
+                    entity_dict_raw = entity.to_dict()
+                else:
+                    # Manual conversion
+                    entity_dict_raw = {
+                        'entity_id': entity.entity_id,
+                        'name': entity.name,
+                        'description': entity.description,
+                        'theme_id': entity.theme_id,
+                        'is_unique_per_settlement': entity.is_unique_per_settlement,
+                        'metadata_': entity.metadata_,
+                        'stages': [s.to_dict() if hasattr(s, 'to_dict') else vars(s) for s in entity.stages],
+                        'created_at': entity.created_at,
+                        'updated_at': entity.updated_at
+                    }
 
             # Helper function to recursively rename 'entity_id' to 'id'
             def rename_entity_id_to_id_recursive(data: Any) -> Any:
@@ -54,6 +72,23 @@ class BuildingBlueprintService:
                 return data
 
             entity_dict_processed = rename_entity_id_to_id_recursive(entity_dict_raw)
+            
+            # Ensure required fields exist
+            if 'theme_id' not in entity_dict_processed and hasattr(entity, 'theme_id'):
+                entity_dict_processed['theme_id'] = entity.theme_id
+            
+            if 'created_at' not in entity_dict_processed and hasattr(entity, 'created_at'):
+                entity_dict_processed['created_at'] = entity.created_at
+                
+            if 'updated_at' not in entity_dict_processed and hasattr(entity, 'updated_at'):
+                entity_dict_processed['updated_at'] = entity.updated_at
+            
+            # Convert datetime objects to ISO format strings for JSON serialization if needed
+            if 'created_at' in entity_dict_processed and isinstance(entity_dict_processed['created_at'], datetime):
+                entity_dict_processed['created_at'] = entity_dict_processed['created_at'].isoformat()
+                
+            if 'updated_at' in entity_dict_processed and isinstance(entity_dict_processed['updated_at'], datetime):
+                entity_dict_processed['updated_at'] = entity_dict_processed['updated_at'].isoformat()
             
             return BuildingBlueprintRead.model_validate(entity_dict_processed)
             

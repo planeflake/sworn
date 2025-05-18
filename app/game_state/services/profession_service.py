@@ -1,11 +1,11 @@
 # --- START OF FILE app/game_state/services/profession_service.py ---
 
 import logging
+import uuid
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from typing import List, Optional
-import dataclasses # To convert domain entity before schema validation
-
 from app.game_state.repositories.profession_repository import ProfessionRepository
 from app.game_state.managers.profession_definition_manager import ProfessionManager # Optional: Use if create logic is complex
 from app.game_state.entities.profession_definition_entity import ProfessionDefinitionEntity
@@ -23,24 +23,94 @@ class ProfessionService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.repository = ProfessionRepository(db=self.db)
+        self.manager = ProfessionManager
         # self.theme_service = ThemeService(db=self.db) # Optional: for validation
 
+    @staticmethod
     async def _convert_entity_to_read_schema(
-        self, entity: Optional[ProfessionDefinitionEntity]
+        entity: Optional[ProfessionDefinitionEntity]
     ) -> Optional[ProfessionDefinitionRead]:
         """Converts domain entity to Pydantic Read schema."""
         if entity is None:
             return None
         try:
-            entity_dict = dataclasses.asdict(entity)
-            # Handle potential name mismatch between BaseEntity and Schema
-            if 'entity_id' in entity_dict and 'id' not in entity_dict:
-                 entity_dict['id'] = entity_dict.pop('entity_id')
-            # Add any other necessary data transformations here
+            # Instead of relying on to_dict, create a minimal dict with just the fields we need
+            entity_dict = {
+                'id': str(entity.entity_id),
+                'name': entity.name,
+                'display_name': getattr(entity, 'display_name', entity.name),
+                'created_at': datetime.now(timezone.utc)  # Use current time as a fallback
+            }
+            
+            # Add optional fields if they exist
+            if hasattr(entity, 'description') and entity.description is not None:
+                entity_dict['description'] = entity.description
+                
+            if hasattr(entity, 'category') and entity.category is not None:
+                entity_dict['category'] = entity.category
+                
+            # Fix for skill_requirements: Check if it's a Field object
+            if hasattr(entity, 'skill_requirements'):
+                if hasattr(entity.skill_requirements, 'default_factory') and callable(entity.skill_requirements.default_factory):
+                    # If it's a dataclass Field object, use an empty list
+                    entity_dict['skill_requirements'] = []
+                else:
+                    entity_dict['skill_requirements'] = entity.skill_requirements or []
+                
+            # Fix for available_theme_ids: Check if it's a Field object
+            if hasattr(entity, 'available_theme_ids'):
+                if hasattr(entity.available_theme_ids, 'default_factory') and callable(entity.available_theme_ids.default_factory):
+                    # If it's a dataclass Field object, use an empty list
+                    entity_dict['available_theme_ids'] = []
+                else:
+                    theme_ids = entity.available_theme_ids or []
+                    # Convert UUIDs to strings
+                    entity_dict['available_theme_ids'] = [str(theme_id) if isinstance(theme_id, uuid.UUID) else theme_id 
+                                                      for theme_id in theme_ids]
+                
+            # Fix for valid_unlock_methods: Check if it's a Field object
+            if hasattr(entity, 'valid_unlock_methods'):
+                if hasattr(entity.valid_unlock_methods, 'default_factory') and callable(entity.valid_unlock_methods.default_factory):
+                    # If it's a dataclass Field object, use an empty list
+                    entity_dict['valid_unlock_methods'] = []
+                else:
+                    entity_dict['valid_unlock_methods'] = entity.valid_unlock_methods or []
+                
+            # Fix for unlock_condition_details: Check if it's a Field object
+            if hasattr(entity, 'unlock_condition_details'):
+                if hasattr(entity.unlock_condition_details, 'default_factory') and callable(entity.unlock_condition_details.default_factory):
+                    # If it's a dataclass Field object, use an empty list
+                    entity_dict['unlock_condition_details'] = []
+                else:
+                    entity_dict['unlock_condition_details'] = entity.unlock_condition_details or []
+                
+            if hasattr(entity, 'python_class_override'):
+                entity_dict['python_class_override'] = entity.python_class_override
+                
+            if hasattr(entity, 'archetype_handler'):
+                entity_dict['archetype_handler'] = entity.archetype_handler
+                
+            # Fix for configuration_data: Check if it's a Field object
+            if hasattr(entity, 'configuration_data'):
+                if hasattr(entity.configuration_data, 'default_factory') and callable(entity.configuration_data.default_factory):
+                    # If it's a dataclass Field object, use an empty dict
+                    entity_dict['configuration_data'] = {}
+                else:
+                    entity_dict['configuration_data'] = entity.configuration_data or {}
+                
+            if hasattr(entity, 'updated_at') and entity.updated_at is not None:
+                if isinstance(entity.updated_at, datetime):
+                    entity_dict['updated_at'] = entity.updated_at
+            
+            # Additional logging to verify field contents
+            logging.debug(f"Final entity dict for schema validation: {entity_dict}")
+            
+            # Validate and convert to Pydantic schema
             return ProfessionDefinitionRead.model_validate(entity_dict)
         except Exception as e:
             logging.error(f"Failed to convert ProfessionDefinitionEntity to Read schema: {e}", exc_info=True)
             logging.error(f"Entity data: {entity}")
+            #logging.error(f"Entity dict for schema conversion: {entity_dict if 'entity_dict' in locals() else 'N/A'}")
             # In production, you might want a more generic error
             raise ValueError("Internal error converting profession data.") from e
 
@@ -58,8 +128,9 @@ class ProfessionService:
 
         # 1. Create the transient domain entity (can use Manager or direct instantiation)
         # Using direct instantiation for simplicity here, assuming Manager doesn't add much value for definitions yet
-        transient_entity = ProfessionDefinitionEntity(
-            name=profession_data.name, # Set BaseEntity name
+
+        transient_entity = self.manager.create(
+            name=profession_data.name,  # Set BaseEntity name
             display_name=profession_data.display_name,
             description=profession_data.description,
             category=profession_data.category,

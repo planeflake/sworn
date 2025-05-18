@@ -2,9 +2,9 @@
 
 import uuid
 import enum
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Optional, List, Dict, Any
+from typing import Optional, Dict, Any
 
 from .base import BaseEntity
 from app.game_state.enums.shared import StatusEnum, RarityEnum

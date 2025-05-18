@@ -1,18 +1,18 @@
 # --- START OF FILE app/db/models/item.py ---
 
 import uuid
-import enum
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Optional, Dict, Any
 
 from sqlalchemy import (
-    Integer, String, Text, Boolean, Float, Numeric, DateTime,
-    Enum as SQLAlchemyEnum, ForeignKey, UniqueConstraint, CheckConstraint, Index, func, text
+    Integer, String, Text, Boolean, Numeric, DateTime,
+    Enum as SQLAlchemyEnum, ForeignKey, CheckConstraint, func, text
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID as pgUUID, JSONB, ARRAY
+from sqlalchemy.dialects import postgresql as pg
 
 from .base import Base
+from app.game_state.enums.item import ItemStatus, ItemType
 
 # TYPE CHECKING IMPORTS
 from typing import TYPE_CHECKING
@@ -21,20 +21,6 @@ if TYPE_CHECKING:
     # from .location import Location # If items can be directly at locations
     # from .item_definition import ItemDefinition # If you create item definitions
 
-class ItemStatus(enum.Enum):
-    PRISTINE = "PRISTINE"
-    USED = "USED"
-    BROKEN = "BROKEN"
-
-class ItemType(enum.Enum):
-    WEAPON = "WEAPON"
-    ARMOR = "ARMOR"
-    CONSUMABLE = "CONSUMABLE"
-    MATERIAL = "MATERIAL"
-    QUEST = "QUEST"
-    CURRENCY = "CURRENCY"
-    MISC = "MISC"
-
 class Item(Base):
     """
     SQLAlchemy ORM Model for Items.
@@ -42,7 +28,7 @@ class Item(Base):
     __tablename__ = 'items'
 
     id: Mapped[uuid.UUID] = mapped_column(
-        pgUUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
+        pg.UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()")
     )
 
     # Link to an ItemDefinition model if you have one (highly recommended for non-unique items)
@@ -72,7 +58,7 @@ class Item(Base):
 
     # --- Ownership and Location ---
     owner_character_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        pgUUID(as_uuid=True),
+        pg.UUID(as_uuid=True),
         ForeignKey("characters.id", name="fk_item_owner_char_id", ondelete="SET NULL"), # Set NULL if owner deleted
         nullable=True,
         index=True
@@ -92,7 +78,7 @@ class Item(Base):
 
     # --- Complex Data ---
     _metadata: Mapped[Optional[Dict[str, Any]]] = mapped_column(
-       JSONB, nullable=True, default=lambda: {},
+       pg.JSONB, nullable=True, default=lambda: {},
        comment="Instance-specific data, e.g., magical properties, durability, crafter_id."
     )
 

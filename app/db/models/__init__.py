@@ -3,7 +3,7 @@ from .base import Base  # Import the Base
 
 # Import each model class or module
 from .world import World
-from .theme import Theme
+from .theme import ThemeDB
 from .settlement import Settlement
 from .character import Character
 from .resource import Resource
@@ -20,5 +20,7 @@ from .skill import Skill
 from .location import Location
 from .skill_definition import SkillDefinition
 from .building_upgrade_blueprint import BuildingUpgradeBlueprint
-from .building_instance import BuildingInstanceDB
+from .celestial_events import CelestialEventDB
 from .biome import Biome
+from .zone import Zone
+from .faction import Faction

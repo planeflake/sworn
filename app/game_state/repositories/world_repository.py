@@ -1,12 +1,11 @@
 # app/game_state/repositories/world_repository.py
-import json
 import os
 import redis.asyncio as redis
 from app.db.models.world import World as WorldModel
 from app.game_state.entities.world import WorldEntity
 from app.game_state.repositories.base_repository import BaseRepository
 import logging
-from typing import List, Optional, Union, Dict, Any
+from typing import Optional, Dict, Any
 from app.db.async_session import AsyncSession
 from sqlalchemy.future import select
 from uuid import UUID

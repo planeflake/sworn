@@ -45,11 +45,12 @@ class SkillDefinition(Base):
     # Or use UUIDs if themes have UUID PKs:
     # themes: Mapped[Optional[List[uuid.UUID]]] = mapped_column(ARRAY(pgUUID(as_uuid=True)), nullable=True)
 
-    # Optional: Store base XP curve or related data
-    #metadata: Mapped[Optional[Dict[str, Any]]] = mapped_column(
-    #    JSONB, nullable=True,
-    #    comment="Additional data like XP curve type, related stats, etc."
-    #)
+    # Store base XP curve or related data using _metadata to avoid SQLAlchemy name conflict
+    _metadata: Mapped[Optional[Dict[str, Any]]] = mapped_column(
+        "_metadata", # Use the actual column name in the database
+        JSONB, nullable=True,
+        comment="Additional data like XP curve type, related stats, etc."
+    )
 
     # --- Timestamps ---
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)

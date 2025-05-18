@@ -1,40 +1,37 @@
 # --- START OF FILE app/db/models/world.py ---
 
 import uuid # Import uuid for type hinting
-from sqlalchemy import Column, Integer, String, DateTime, func, ForeignKey, text # Added ForeignKey
+from sqlalchemy import Integer, String, DateTime, func, ForeignKey, text # Added ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship # Added relationship
-from sqlalchemy.dialects.postgresql import UUID as pgUUID # Use pgUUID for clarity
+from sqlalchemy.dialects import postgresql as pg
 from typing import List, Optional # Import List for relationship type hint
 from datetime import datetime # Import datetime for type hinting
-
-
-from app.db.models.character import Character # Import Character model for relationship
 from .base import Base
 # Import related models for TYPE_CHECKING block
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .location import Location
-    from .theme import Theme # For theme relationship
+    from .theme import ThemeDB # For theme relationship
 
 class World(Base):
     """World model for SQLAlchemy ORM"""
     __tablename__ = 'worlds'
 
     id: Mapped[uuid.UUID] = mapped_column( # Use uuid.UUID for Mapped type hint
-        pgUUID(as_uuid=True), # Store as native PG UUID, use Python UUID objects
+        pg.UUID(as_uuid=True), # Store as native PG UUID, use Python UUID objects
         primary_key=True,
         server_default=text("gen_random_uuid()"),
     )
 
     # --- Foreign Key and Relationship to Theme ---
     theme_id: Mapped[Optional[uuid.UUID]] = mapped_column( # Use uuid.UUID, made Optional for now
-        pgUUID(as_uuid=True),
+        pg.UUID(as_uuid=True),
         ForeignKey("themes.id", name="fk_world_theme_id", ondelete="SET NULL"), # Link to themes table
         nullable=True, # Can a world exist without a theme initially? If not, set to False
         index=True
     )
-    theme: Mapped[Optional["Theme"]] = relationship( # Optional if theme_id is nullable
-        "Theme",
+    theme: Mapped[Optional["ThemeDB"]] = relationship( # Optional if theme_id is nullable
+        "ThemeDB",
         # back_populates="worlds" # Assumes Theme model will have a 'worlds' relationship
         lazy="selectin"
     )

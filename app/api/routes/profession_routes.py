@@ -9,7 +9,7 @@ from app.game_state.schemas.profession_schema import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.dependencies import get_async_db
-from typing import List, Optional
+from typing import List
 from uuid import UUID, uuid4
 import logging
 
@@ -80,16 +80,7 @@ router = APIRouter(
     summary="Create Profession Definition",
 )
 async def create_profession_definition(
-    # Add the examples argument to Body
-    profession_in: ProfessionDefinitionCreate = Body(
-        ...,
-        # examples expects a dictionary where keys are example names/IDs
-        # and values are dictionaries matching the structure used in create_example_body
-        examples={
-            "blacksmith": create_example_body,
-            "innkeeper": create_example_body_innkeeper
-            }
-        ),
+    profession_in: ProfessionDefinitionCreate,
     db: AsyncSession = Depends(get_async_db),
 ):
     """

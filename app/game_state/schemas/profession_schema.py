@@ -6,7 +6,7 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 
 # Optional: Import Enums if you want to use them directly in Schemas for validation
-from app.db.models.profession_definition import ProfessionCategory, ProfessionUnlockType
+#from app.game_state.enums.profession import ProfessionCategory, ProfessionUnlockType
 
 class ProfessionDefinitionBase(BaseModel):
     """Base schema for common profession definition fields."""

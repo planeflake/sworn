@@ -5,10 +5,9 @@ import logging
 from pydantic import BaseModel, Field # Added Field
 import random
 from app.game_state.services.world_service import WorldService
-from app.game_state.models.settlement import SettlementEntity # Assuming this is your ORM model
 from app.game_state.services.settlement_service import SettlementService
 from uuid import UUID
-from typing import Optional, List # Added List for consistency
+from typing import Optional, Dict # Added Dict for resource quantities
 from datetime import datetime
 
 # --- Pydantic Models ---
@@ -19,7 +18,7 @@ class SettlementRead(BaseModel):
     description: Optional[str] = None
     world_id: UUID
     population: int
-    resources: Optional[List[str]] = Field(default_factory=list) # Assuming resources are strings, adjust as needed
+    resources: Dict[str, int] = Field(default_factory=dict)
     created_at: datetime
     updated_at: Optional[datetime] = None
 
@@ -33,6 +32,8 @@ class SettlementCreate(BaseModel):
     world_id: UUID = Field(..., description="The ID of the world where the settlement will be created.")
     name: Optional[str] = Field(default=None, min_length=3, max_length=100, description="The name of the settlement. Auto-generated if not provided.")
     description: Optional[str] = Field(default=None, max_length=500, description="A description for the settlement.")
+    population: Optional[int] = Field(default=10, ge=1, description="The initial population of the settlement.")
+    resources: Optional[Dict[str,int]] = Field(default_factory=dict, description="A dict of resource IDs to add to the settlement.")
 
     # Pydantic V2 config for schema examples
     model_config = {
@@ -41,7 +42,14 @@ class SettlementCreate(BaseModel):
                 {
                     "name": "Riverside",
                     "description": "A quiet village by the river.",
-                    "world_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef" # Example UUID
+                    "world_id": "d376bc6a-d9c6-40b4-91d6-78bf398e1bfb", # Example UUID
+                    "population": 10,
+                    "resources": [
+                        {
+                            "resource_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+                            "quantity": 10
+                        }
+                    ]
                 },
                 {
                     # Example for auto-generated name (client sends world_id only)
@@ -70,11 +78,9 @@ class SettlementOutputResponse(BaseModel):
 router = APIRouter()
 
 @router.post(
-    "/settlements",
+    "/",
     response_model=SettlementCreatedResponse,
     status_code=status.HTTP_201_CREATED, # Use 201 for successful creation
-    summary="Create a new Settlement",
-    tags=["Settlements"] # For grouping in OpenAPI docs
 )
 async def create_settlement_endpoint( # Renamed for clarity
         settlement_data: SettlementCreate, # Correctly define input model instance
@@ -105,14 +111,12 @@ async def create_settlement_endpoint( # Renamed for clarity
 
         # Assuming SettlementService.create returns an ORM instance (SettlementEntity)
         # And that SettlementRead can be created from this ORM instance (due to from_attributes)
-        created_settlement_entity: SettlementEntity = await settlement_service.create( # Corrected service call
+        created_settlement_entity: SettlementRead = await settlement_service.create( # Corrected service call
             name=name_to_create,
             description=settlement_data.description,
-            world_id=settlement_data.world_id
-            # Add other necessary parameters like population, resources if they are set at creation
-            # For example, if they should default to 0 or empty list:
-            # population=0, # if your service method expects it
-            # resources=[], # if your service method expects it
+            world_id=settlement_data.world_id,
+            population=settlement_data.population, # if your service method expects it
+            resources=settlement_data.resources # if your service method expects it
         )
 
         # Convert ORM entity to Pydantic model for the response
@@ -133,5 +137,214 @@ async def create_settlement_endpoint( # Renamed for clarity
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An unexpected error occurred while creating the settlement." # Avoid leaking raw error details
+        )
+        
+class ResourceAddRequest(BaseModel):
+    """Request model for adding a resource to a settlement."""
+    resource_id: UUID = Field(..., description="The UUID of the resource to add.")
+    quantity: int = Field(1, ge=1, description="The quantity of the resource to add. Defaults to 1.")
+    
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "resource_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+                    "quantity": 10
+                }
+            ]
+        }
+    }
+    
+@router.post(
+    "/{settlement_id}/resources",
+    response_model=SettlementOutputResponse
+)
+async def add_resource_to_settlement(
+    settlement_id: UUID,
+    resource_data: ResourceAddRequest,
+    db: AsyncSession = Depends(get_async_db)
+):
+    """
+    Add a quantity of a specific resource to a settlement.
+    
+    - **settlement_id**: UUID of the settlement.
+    - **resource_id**: UUID of the resource to add.
+    - **quantity**: Amount of the resource to add (must be >= 1).
+    """
+    try:
+        settlement_service = SettlementService(db=db)
+        updated_settlement = await settlement_service.add_resource(
+            settlement_id=settlement_id,
+            resource_id=resource_data.resource_id,
+            quantity=resource_data.quantity
+        )
+        
+        if not updated_settlement:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Settlement with ID '{settlement_id}' not found."
+            )
+            
+        return SettlementOutputResponse(
+            settlement=updated_settlement,
+            message=f"Successfully added {resource_data.quantity} of resource {resource_data.resource_id} to settlement."
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.exception(f"Error adding resource to settlement: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while adding the resource."
+        )
+        
+class ResourceRemoveRequest(BaseModel):
+    """Request model for removing a resource from a settlement."""
+    resource_id: UUID = Field(..., description="The UUID of the resource to remove.")
+    quantity: int = Field(1, ge=1, description="The quantity of the resource to remove. Defaults to 1.")
+    
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "resource_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+                    "quantity": 5
+                }
+            ]
+        }
+    }
+    
+@router.delete(
+    "/{settlement_id}/resources",
+    response_model=SettlementOutputResponse
+)
+async def remove_resource_from_settlement(
+    settlement_id: UUID,
+    resource_data: ResourceRemoveRequest,
+    db: AsyncSession = Depends(get_async_db)
+):
+    """
+    Remove a quantity of a specific resource from a settlement.
+    
+    - **settlement_id**: UUID of the settlement.
+    - **resource_id**: UUID of the resource to remove.
+    - **quantity**: Amount of the resource to remove (must be >= 1).
+    """
+    try:
+        settlement_service = SettlementService(db=db)
+        updated_settlement = await settlement_service.remove_resource(
+            settlement_id=settlement_id,
+            resource_id=resource_data.resource_id,
+            quantity=resource_data.quantity
+        )
+        
+        if not updated_settlement:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Settlement with ID '{settlement_id}' not found or not enough resources available."
+            )
+            
+        return SettlementOutputResponse(
+            settlement=updated_settlement,
+            message=f"Successfully removed {resource_data.quantity} of resource {resource_data.resource_id} from settlement."
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.exception(f"Error removing resource from settlement: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while removing the resource."
+        )
+        
+@router.get(
+    "/{settlement_id}/resources",
+    response_model=Dict[str, int]
+)
+async def get_settlement_resources(
+    settlement_id: UUID,
+    db: AsyncSession = Depends(get_async_db)
+):
+    """
+    Get all resources and their quantities in a settlement.
+    
+    - **settlement_id**: UUID of the settlement.
+    """
+    try:
+        settlement_service = SettlementService(db=db)
+        resources = await settlement_service.get_available_resources(settlement_id)
+        
+        if resources is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Settlement with ID '{settlement_id}' not found."
+            )
+            
+        # Convert UUID keys to strings for JSON serialization
+        resources_str = {str(k): v for k, v in resources.items()}
+            
+        return resources_str
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.exception(f"Error getting settlement resources: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while retrieving resources."
+        )
+
+class LeaderAssignRequest(BaseModel):
+    """Request model for assigning a leader to a settlement."""
+    leader_id: UUID = Field(..., description="The UUID of the character to assign as the leader.")
+    
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "leader_id": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                }
+            ]
+        }
+    }
+
+@router.put(
+    "/{settlement_id}/leader",
+    response_model=SettlementOutputResponse
+)
+async def assign_leader_to_settlement(
+    settlement_id: UUID,
+    leader_data: LeaderAssignRequest,
+    db: AsyncSession = Depends(get_async_db)
+):
+    """
+    Assign a character as the leader of a settlement.
+    
+    - **settlement_id**: UUID of the settlement to modify.
+    - **leader_id**: UUID of the character to assign as the leader.
+    """
+    try:
+        settlement_service = SettlementService(db=db)
+        updated_settlement = await settlement_service.set_leader(
+            settlement_id=settlement_id,
+            leader_id=leader_data.leader_id
+        )
+        
+        if not updated_settlement:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Settlement with ID '{settlement_id}' not found."
+            )
+            
+        return SettlementOutputResponse(
+            settlement=updated_settlement,
+            message=f"Successfully assigned leader {leader_data.leader_id} to settlement."
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.exception(f"Error assigning leader to settlement: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred while assigning the leader."
         )
 

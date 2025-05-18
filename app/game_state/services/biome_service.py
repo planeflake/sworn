@@ -1,9 +1,8 @@
 # --- START OF FILE app/game_state/services/biome_service.py ---
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
-from typing import Optional, List, Dict, Any
+from typing import Optional, List
 import logging
-import dataclasses
 
 # Import Repository, Manager and Domain Entity
 from app.game_state.repositories.biome_repository import BiomeRepository
@@ -26,8 +25,9 @@ class BiomeService:
         self.repository = BiomeRepository(db=self.db)
         self.manager = BiomeManager()
         logging.debug("BiomeService initialized with BiomeRepository and BiomeManager.")
-    
-    async def _convert_entity_to_read_schema(self, entity: Optional[BiomeEntity]) -> Optional[BiomeRead]:
+
+    @staticmethod
+    async def _convert_entity_to_read_schema(entity: Optional[BiomeEntity]) -> Optional[BiomeRead]:
         """Convert a domain entity to an API read schema."""
         if entity is None:
             return None

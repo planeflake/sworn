@@ -6,7 +6,7 @@ from typing import Optional, List, Dict, Any
 
 from sqlalchemy import (
     Integer, String, Text, Boolean, DateTime, Float,
-    ForeignKey, UniqueConstraint, Index, func, text
+    ForeignKey, UniqueConstraint, func, text
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as pgUUID, JSONB
@@ -42,8 +42,8 @@ class BuildingBlueprint(Base):
         index=True
     )
     theme: Mapped["Theme"] = relationship(
-        "Theme",
-        back_populates="building_blueprints", # Matches relationship in Theme model
+        "ThemeDB",
+        # The back_populates is removed since we removed the relationship from Theme
         lazy="selectin",
     )
 

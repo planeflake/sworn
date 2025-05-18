@@ -1,0 +1,87 @@
+# --- START OF FILE app/game_state/entities/_template_entity.py ---
+# Rename this file, e.g., settlement_building.py, character.py, item.py
+
+# --- Core Python Imports ---
+from uuid import UUID
+from dataclasses import field #,dataclass
+from datetime import datetime, timezone # Use timezone-aware datetime
+from typing import Optional, List, Dict, Any # For type hinting
+
+# --- Project Imports ---
+from app.game_state.enums.shared import StatusEnum
+from .base import BaseEntity    # <<< Import the BaseEntity
+
+
+# --- Domain Entity Definition ---
+# Rename 'DomainEntityTemplate' to your specific entity name (e.g., SettlementBuilding, GameItem)
+
+class Zone(BaseEntity): # <<< Inherit from BaseEntity
+    """
+    Template for a Domain Entity using Python dataclasses.
+    Inherits 'entity_id' and 'name' from BaseEntity.
+    Represents the state of a core concept within the game's domain logic layer.
+
+    NOTE: Inherited fields:
+     - entity_id: UUID (from BaseEntity)
+     - name: str (from BaseEntity, defaults to "Unnamed Entity")
+    """
+
+    # --- Specific Attributes for this Entity ---
+    # id and name are inherited from BaseEntity - DO NOT REDEFINE HERE
+
+    # Optional longer text description (could override/supplement BaseEntity's name).
+    description: Optional[str] = None
+    controlling_faction: Optional[UUID] = None
+    settlements: List[UUID] = field(default_factory=list)
+    themes: List[UUID] = field(default_factory=list)
+    biomes: List[UUID] = field(default_factory=list)
+    world_id: Optional[UUID] = None
+
+    # --- Enum for State/Type ---
+    status: StatusEnum = StatusEnum.ACTIVE
+
+    # --- Date/Time Attributes ---
+    # created_at/updated_at might also be candidates for BaseEntity if ALL entities need them.
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = None
+
+    # --- Collections ---
+    tags: List[str] = field(default_factory=list)
+    _metadata: Dict[str, Any] = field(default_factory=dict)
+
+    # --- Relationships (Represented by ID) ---
+
+
+    # --- Initialization Logic ---
+    def __post_init__(self):
+        """
+        Called automatically after the dataclass is initialized.
+        The BaseEntity __post_init__ (if defined) is NOT called automatically.
+        Call super().__post_init__() if needed.
+        """
+        # Example: Set 'updated_at' initially if not provided.
+        if self.updated_at is None:
+            # If BaseEntity handles created_at, you might need to access it differently
+            # depending on its definition, but assuming it's directly available:
+            base_created_at = getattr(self, 'created_at', datetime.now(timezone.utc)) # Fallback just in case
+            self.updated_at = base_created_at
+
+
+    # --- Representation ---
+    # __repr__ is inherited from BaseEntity.
+    # If you need to add more info, override it like this:
+    # def __repr__(self) -> str:
+    #     base_repr = super().__repr__() # Get the parent's repr string
+    #     # Find the closing parenthesis of the base repr
+    #     closing_paren_index = base_repr.rfind(')')
+    #     # Add specific fields before the closing parenthesis
+    #     specifics = f", level={self.level}, status={self.status.name}"
+    #     return base_repr[:closing_paren_index] + specifics + base_repr[closing_paren_index:]
+
+
+    # --- Domain Logic Methods ---
+    # As discussed, keep these simple or move to Managers/Services.
+    # Methods can now access inherited 'self.entity_id' and 'self.name'.
+
+
+# --- END OF FILE app/game_state/entities/_template_entity.py ---

@@ -1,0 +1,155 @@
+from typing import List, Optional, Dict, Any, Union
+from uuid import UUID
+from sqlalchemy import select, update, delete
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.db.models.{{ model_file }} import {{ model_name }}
+from app.game_state.entities.{{ entity_file }} import {{ entity_name }}Entity
+from app.game_state.repositories.base_repository import BaseRepository
+
+class {{ entity_name }}Repository(BaseRepository):
+    """
+    Repository for {{ entity_name_readable }} operations.
+    Handles database interactions for {{ model_name }} model.
+    """
+    
+    async def create(self, session: AsyncSession, entity: {{ entity_name }}Entity) -> {{ entity_name }}Entity:
+        """Create a new {{ entity_name_readable }}"""
+        
+        # Create model instance from entity
+        model = {{ model_name }}(
+            id=entity.id,
+            {% for field in fields %}
+            {{ field.name }}=entity.{{ field.name }},
+            {% endfor %}
+        )
+        
+        # Add to session and commit
+        session.add(model)
+        await session.commit()
+        await session.refresh(model)
+        
+        # Convert back to entity and return
+        return self._model_to_entity(model)
+    
+    async def get_by_id(self, session: AsyncSession, id: Union[UUID, str]) -> Optional[{{ entity_name }}Entity]:
+        """Get {{ entity_name_readable }} by ID"""
+        
+        # Ensure ID is UUID
+        if isinstance(id, str):
+            id = UUID(id)
+            
+        # Build query with any needed relationships
+        query = select({{ model_name }}).where({{ model_name }}.id == id)
+        {% if relationships %}
+        query = query{% for relationship in relationships %}
+            .options(selectinload({{ model_name }}.{{ relationship.name }})){% endfor %}
+        {% endif %}
+        
+        # Execute query
+        result = await session.execute(query)
+        model = result.scalars().first()
+        
+        if not model:
+            return None
+            
+        # Convert to entity and return
+        return self._model_to_entity(model)
+    
+    async def get_all(self, session: AsyncSession) -> List[{{ entity_name }}Entity]:
+        """Get all {{ entity_name_readable }}s"""
+        
+        # Build query
+        query = select({{ model_name }})
+        {% if relationships %}
+        query = query{% for relationship in relationships %}
+            .options(selectinload({{ model_name }}.{{ relationship.name }})){% endfor %}
+        {% endif %}
+        
+        # Execute query
+        result = await session.execute(query)
+        models = result.scalars().all()
+        
+        # Convert to entities and return
+        return [self._model_to_entity(model) for model in models]
+    
+    async def update(self, session: AsyncSession, entity: {{ entity_name }}Entity) -> {{ entity_name }}Entity:
+        """Update {{ entity_name_readable }}"""
+        
+        # Ensure ID is UUID
+        if isinstance(entity.id, str):
+            entity_id = UUID(entity.id)
+        else:
+            entity_id = entity.id
+            
+        # Create update values
+        values = {
+            {% for field in fields %}
+            "{{ field.name }}": entity.{{ field.name }},
+            {% endfor %}
+        }
+        
+        # Create and execute update
+        stmt = update({{ model_name }}).where({{ model_name }}.id == entity_id).values(**values)
+        await session.execute(stmt)
+        await session.commit()
+        
+        # Get updated entity
+        updated_entity = await self.get_by_id(session, entity_id)
+        return updated_entity
+    
+    async def delete(self, session: AsyncSession, id: Union[UUID, str]) -> bool:
+        """Delete {{ entity_name_readable }}"""
+        
+        # Ensure ID is UUID
+        if isinstance(id, str):
+            id = UUID(id)
+            
+        # Create and execute delete
+        stmt = delete({{ model_name }}).where({{ model_name }}.id == id)
+        result = await session.execute(stmt)
+        await session.commit()
+        
+        # Return True if row was deleted
+        return result.rowcount > 0
+    
+    def _model_to_entity(self, model: {{ model_name }}) -> {{ entity_name }}Entity:
+        """Convert model to entity"""
+        
+        {% for relationship in relationships %}
+        {% if relationship.is_collection %}
+        # Process {{ relationship.name }} collection
+        {{ relationship.name }}_entities = []
+        if model.{{ relationship.name }}:
+            for item in model.{{ relationship.name }}:
+                # This is a placeholder - the generator will need to handle relationship conversions
+                # based on your specific repository pattern
+                # {{ relationship.name }}_entities.append(self._convert_{{ relationship.item_type }}(item))
+                pass
+        {% else %}
+        # Process {{ relationship.name }} relationship
+        {{ relationship.name }}_entity = None
+        if model.{{ relationship.name }}:
+            # This is a placeholder - the generator will need to handle relationship conversions
+            # {{ relationship.name }}_entity = self._convert_{{ relationship.type }}(model.{{ relationship.name }})
+            pass
+        {% endif %}
+        {% endfor %}
+        
+        # Create entity from model
+        entity = {{ entity_name }}Entity(
+            id=model.id,
+            {% for field in fields %}
+            {{ field.name }}=model.{{ field.name }},
+            {% endfor %}
+            {% for relationship in relationships %}
+            {% if relationship.is_collection %}
+            {{ relationship.name }}={{ relationship.name }}_entities,
+            {% else %}
+            {{ relationship.name }}={{ relationship.name }}_entity,
+            {% endif %}
+            {% endfor %}
+        )
+        
+        return entity

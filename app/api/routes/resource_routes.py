@@ -3,12 +3,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from app.game_state.services.resource_service import ResourceService
 from app.game_state.enums.shared import RarityEnum, StatusEnum
-from app.game_state.models.resource import ResourceApiModel 
+from app.api.schemas.resource import ResourceRead, ResourceCreate
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.dependencies import get_async_db
 from pydantic import BaseModel, Field 
 from typing import List, Optional
-from uuid import UUID
+from uuid import UUID,uuid4
 import logging
 
 router = APIRouter()
@@ -35,14 +35,14 @@ class ResourceCreatePayload(BaseModel):
         }
 
 class ResourceListResponse(BaseModel):
-    resources: List[ResourceApiModel]
+    resources: List[ResourceRead]
     total: int
 
 # --- API Routes ---
 
 @router.post(
     "/",
-    response_model=ResourceApiModel,
+    response_model=ResourceRead,
     status_code=201 
 )
 async def define_new_resource_type(
@@ -55,17 +55,19 @@ async def define_new_resource_type(
     """
     resource_service = ResourceService(db=db)
     try:
-        from uuid import uuid4
-        new_resource_id = uuid4()
-
-        created_resource = await resource_service.create_resource_type(
-            resource_id=new_resource_id, 
+        # Convert the payload to ResourceCreate
+        resource_data = ResourceCreate(
+            id=uuid4(),  # Generate new UUID
             name=payload.name,
             description=payload.description,
             stack_size=payload.stack_size,
             rarity=payload.rarity,
             status=payload.status,
             theme_id=payload.theme_id
+        )
+        
+        created_resource = await resource_service.create_resource_type(
+            resource_data=resource_data
         )
         return created_resource
     except ValueError as ve:
@@ -77,7 +79,7 @@ async def define_new_resource_type(
 
 @router.get(
     "/{resource_id}",
-    response_model=ResourceApiModel,
+    response_model=ResourceRead,
     summary="Get Resource By ID"
 )
 async def get_resource_by_id(

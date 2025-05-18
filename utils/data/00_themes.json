@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Fantasy Medieval",
+    "description": "A world of magic, dragons, and medieval technology"
+  },
+  {
+    "name": "Post-Apocalyptic",
+    "description": "A world devastated by nuclear war, where survivors struggle to rebuild"
+  },
+  {
+    "name": "Sci-Fi",
+    "description": "A futuristic world with advanced technology, space travel, and alien civilizations"
+  },
+  {
+    "name": "Lovecraftian",
+    "description": "A world where cosmic horrors lurk beyond the veil of reality, threatening humanity's sanity"
+  }
+]

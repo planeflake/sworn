@@ -1,13 +1,14 @@
 import logging
 import random
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 
 from sqlalchemy import Boolean
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-from app.api.schemas.character import CharacterRead, CharacterCreate
+from app.api.schemas.character import CharacterRead, CharacterCreate, CharacterTraitsUpdate, AddCharacterTraits
+from app.game_state.enums.character import CharacterTraitEnum
 from app.game_state.entities.character import CharacterEntity
 from app.game_state.managers.character_manager import CharacterManager
 from app.game_state.repositories.character_repository import CharacterRepository
@@ -129,6 +130,7 @@ class CharacterService:
             character_type=character_data.character_type, # Assuming these are in CharacterCreateSchema
             world_id=character_data.world_id,
             description=character_data.description,
+            traits=character_data.traits,
             # Pass other fields from character_data as needed by CharacterManager.create
             # or directly to the CharacterEntity constructor if Manager.create is simple.
         )
@@ -161,7 +163,7 @@ class CharacterService:
             logging.warning(f"Character ID: {character_id} not found for deletion.")
         return deleted
 
-    async def add_resources(self, character_id: UUID, resources: list) -> Boolean:
+    async def add_resources(self, character_id: UUID, resources: list) -> bool:
         """
         Adds resources to a character.
 
@@ -184,3 +186,99 @@ class CharacterService:
         else:
             logging.warning(f"Failed to add resources to character ID: {character_id}")
         return success
+        
+    async def update_traits(self, character_id: UUID, traits_data: CharacterTraitsUpdate) -> Optional[CharacterRead]:
+        """
+        Updates a character's traits.
+        
+        Args:
+            character_id: The ID of the character to update.
+            traits_data: The new traits to assign to the character.
+            
+        Returns:
+            The updated character data if successful, None otherwise.
+        """
+        logging.info(f"Updating traits for character ID: {character_id}")
+        
+        # First, get the existing character entity
+        character_entity = await self.character_repository.find_by_id(character_id)
+        if not character_entity:
+            logging.warning(f"Character ID: {character_id} not found for trait update.")
+            return None
+        
+        # Validate the traits (optional, if needed)
+        for trait in traits_data.traits:
+            if not isinstance(trait, CharacterTraitEnum):
+                logging.warning(f"Invalid trait value: {trait}")
+                raise ValueError(f"Invalid trait value: {trait}")
+        
+        # Update the traits
+        character_entity.traits = traits_data.traits
+        
+        # Save the updated entity
+        try:
+            updated_entity = await self.character_repository.save(character_entity)
+            logging.info(f"Successfully updated traits for character ID: {character_id}")
+            return await self._convert_entity_to_read_schema(updated_entity)
+        except Exception as e:
+            logging.error(f"Error updating traits for character ID: {character_id}: {e}", exc_info=True)
+            raise ValueError(f"Could not update character traits: {e}") from e
+            
+    async def get_character_traits(self, character_id: UUID) -> List[CharacterTraitEnum]:
+        """
+        Gets a character's traits.
+        
+        Args:
+            character_id: The ID of the character.
+            
+        Returns:
+            A list of the character's traits.
+        """
+        logging.info(f"Getting traits for character ID: {character_id}")
+        
+        # Get the character entity
+        character_entity = await self.character_repository.find_by_id(character_id)
+        if not character_entity:
+            logging.warning(f"Character ID: {character_id} not found for getting traits.")
+            return []
+        
+        return character_entity.traits
+        
+    async def add_traits(self, character_id: UUID, traits_data: AddCharacterTraits) -> Optional[CharacterRead]:
+        """
+        Adds traits to a character (preserving existing traits).
+        
+        Args:
+            character_id: The ID of the character to update.
+            traits_data: The traits to add to the character.
+            
+        Returns:
+            The updated character data if successful, None otherwise.
+        """
+        logging.info(f"Adding traits for character ID: {character_id}")
+        
+        # First, get the existing character entity
+        character_entity = await self.character_repository.find_by_id(character_id)
+        if not character_entity:
+            logging.warning(f"Character ID: {character_id} not found for trait addition.")
+            return None
+        
+        # Validate the traits
+        for trait in traits_data.traits:
+            if not isinstance(trait, CharacterTraitEnum):
+                logging.warning(f"Invalid trait value: {trait}")
+                raise ValueError(f"Invalid trait value: {trait}")
+        
+        # Add the new traits (avoiding duplicates)
+        existing_traits = set(character_entity.traits)
+        new_traits = existing_traits.union(set(traits_data.traits))
+        character_entity.traits = list(new_traits)
+        
+        # Save the updated entity
+        try:
+            updated_entity = await self.character_repository.save(character_entity)
+            logging.info(f"Successfully added traits for character ID: {character_id}")
+            return await self._convert_entity_to_read_schema(updated_entity)
+        except Exception as e:
+            logging.error(f"Error adding traits for character ID: {character_id}: {e}", exc_info=True)
+            raise ValueError(f"Could not add character traits: {e}") from e
