@@ -22,9 +22,7 @@ class EquipmentEntity(BaseEntity):
     is_enabled: bool = True
     status: StatusEnum = StatusEnum.ACTIVE
     
-    # Timestamps
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: Optional[datetime] = None
+    # Timestamps are now handled by BaseEntity
     
     # Additional metadata
     tags: List[str] = field(default_factory=list)
@@ -34,8 +32,7 @@ class EquipmentEntity(BaseEntity):
     owner_character_id: Optional[uuid.UUID] = None
     
     def __post_init__(self):
-        """Initialize updated_at if needed."""
-        if self.updated_at is None:
-            self.updated_at = self.created_at
+        """Initialize fields as needed."""
+        # BaseEntity now handles timestamp initialization
 
 # --- END OF FILE app/game_state/entities/equipment.py ---

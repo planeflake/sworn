@@ -1,9 +1,9 @@
 # app/api/schemas/world.py
-import uuid
-from uuid import UUID
-from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
+from pydantic import BaseModel, Field
 from datetime import datetime
+from uuid import UUID
+import uuid
 
 class WorldBase(BaseModel):
     """Base schema for common world attributes."""

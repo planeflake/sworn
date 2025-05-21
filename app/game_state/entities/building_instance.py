@@ -2,7 +2,6 @@
 
 import uuid
 from dataclasses import dataclass, field, KW_ONLY
-from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 
 # --- Project Imports ---
@@ -49,9 +48,7 @@ class BuildingInstanceEntity(BaseEntity): # Inherit from BaseEntity
     instance_description: Optional[str] = field(default=None, repr=False)
 
     # --- Timestamps ---
-    # Assuming BaseEntity might provide these. If not, uncomment and adjust __post_init__.
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: Optional[datetime] = field(default_factory=lambda: datetime.now(timezone.utc))
+    # created_at and updated_at now come from BaseEntity
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert BuildingInstanceEntity to a dictionary with safe serialization."""
@@ -71,9 +68,11 @@ class BuildingInstanceEntity(BaseEntity): # Inherit from BaseEntity
             "stored_resources": {str(k): v for k, v in self.stored_resources.items()},
             "assigned_workers_details": self.assigned_workers_details,
             "active_features": [str(f) for f in self.active_features],
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+        
+        # Include the base entity fields (including timestamps)
+        base_data = super().to_dict()
+        result.update(base_data)
         if self.instance_description:
             result["instance_description"] = self.instance_description
         return result
@@ -96,14 +95,7 @@ class BuildingInstanceEntity(BaseEntity): # Inherit from BaseEntity
         elif self.construction_progress >= 1.0 and self.status == BuildingStatus.UNDER_CONSTRUCTION:
               self.status = BuildingStatus.ACTIVE
 
-        # Handle updated_at if not set by BaseEntity or constructor
-        # This ensures updated_at is at least the creation time initially.
-        # Subsequent updates to updated_at would be handled by the service/manager
-        # right before saving after a modification.
-        if not hasattr(super(), 'updated_at') and self.updated_at is None:
-            self.updated_at = self.created_at
-        elif hasattr(super(), 'updated_at') and getattr(self, 'updated_at') is None and hasattr(self, 'created_at'):
-             setattr(self, 'updated_at', getattr(self, 'created_at'))
+        # BaseEntity now handles timestamp setup
 
 
     # --- Representation ---

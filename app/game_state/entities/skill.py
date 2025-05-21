@@ -25,12 +25,10 @@ class SkillEntity(BaseEntity):
     category: Optional[str] = None
     icon_path: Optional[str] = None
     
-    # Timestamps
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: Optional[datetime] = None
+    # Timestamps are now handled by BaseEntity
     
     # Additional metadata
-    tags: List[str] = field(default_factory=list)
+    # tags is now inherited from BaseEntity
     metadata: Dict[str, Any] = field(default_factory=dict)
     
     # Relationships
@@ -38,8 +36,7 @@ class SkillEntity(BaseEntity):
     
     def __post_init__(self):
         """Initialize fields as needed."""
-        if self.updated_at is None:
-            self.updated_at = self.created_at
+        # BaseEntity now handles timestamp initialization
 
 
 # --- END OF FILE app/game_state/entities/skill.py ---

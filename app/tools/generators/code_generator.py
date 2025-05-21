@@ -57,6 +57,7 @@ def generate_entity(model_data: Dict[str, Any], config: Any) -> str:
     # Prepare template context
     context = {
         'entity_name': model_data['entity_name'],
+        'entity_name_readable': model_data['entity_name_readable'],
         'fields': model_data['fields'],
         'required_fields': model_data['required_fields'],
         'optional_fields': model_data['optional_fields'],
@@ -91,7 +92,9 @@ def generate_repository(model_data: Dict[str, Any], config: Any) -> str:
     context = {
         'entity_name': model_data['entity_name'],
         'model_name': model_data['model_name'],
-        'model_path': model_path,
+        'model_file': model_data['model_file'],
+        'entity_file': model_data['entity_file'],
+        'entity_name_readable': model_data['entity_name_readable'],
         'fields': model_data['fields'],
         'relationships': model_data['relationships'],
     }
@@ -120,6 +123,11 @@ def generate_manager(model_data: Dict[str, Any], config: Any) -> str:
     # Prepare template context
     context = {
         'entity_name': model_data['entity_name'],
+        'entity_name_snake': model_data['entity_name_snake'],
+        'entity_name_snake_plural': model_data['entity_name_snake_plural'],
+        'entity_name_readable': model_data['entity_name_readable'],
+        'entity_file': model_data['entity_file'],
+        'repository_file': model_data['repository_file'],
         'fields': model_data['fields'],
         'required_fields': model_data['required_fields'],
     }
@@ -148,6 +156,11 @@ def generate_service(model_data: Dict[str, Any], config: Any) -> str:
     # Prepare template context
     context = {
         'entity_name': model_data['entity_name'],
+        'entity_name_snake': model_data['entity_name_snake'],
+        'entity_name_snake_plural': model_data['entity_name_snake_plural'],
+        'entity_name_readable': model_data['entity_name_readable'],
+        'entity_file': model_data['entity_file'],
+        'manager_file': model_data['manager_file'],
         'fields': model_data['fields'],
     }
     
@@ -175,9 +188,11 @@ def generate_api_schema(model_data: Dict[str, Any], config: Any) -> str:
     # Prepare template context
     context = {
         'entity_name': model_data['entity_name'],
+        'entity_name_readable': model_data['entity_name_readable'],
         'fields': model_data['fields'],
         'required_fields': model_data['required_fields'],
         'optional_fields': model_data['optional_fields'],
+        'relationships': model_data['relationships'],
     }
     
     # Render the template
@@ -204,7 +219,18 @@ def generate_api_routes(model_data: Dict[str, Any], config: Any) -> str:
     # Prepare template context
     context = {
         'entity_name': model_data['entity_name'],
+        'entity_name_snake': model_data['entity_name_snake'],
+        'entity_name_snake_plural': model_data['entity_name_snake_plural'],
+        'entity_name_readable': model_data['entity_name_readable'],
         'table_name': model_data['table_name'],
+        'schema_file': model_data['schema_file'],
+        'service_file': model_data['service_file'],
+        'repository_file': model_data['repository_file'],
+        'manager_file': model_data['manager_file'],
+        'api_route_prefix': model_data.get('api_route_prefix', model_data['entity_name_snake_plural']),
+        'api_tag': model_data.get('api_tag', model_data['entity_name']),
+        'fields': model_data['fields'],
+        'search_fields': [f for f in model_data['fields'] if not f['primary_key']],
     }
     
     # Render the template

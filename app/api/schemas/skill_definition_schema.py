@@ -7,8 +7,8 @@ from datetime import datetime
 
 class SkillDefinitionBase(BaseModel):
     """Base schema for skill definitions."""
+    id: uuid.UUID = Field(..., description="Unique ID for the skill.")
     name: str = Field(..., min_length=1, max_length=100, description="Unique user-facing name of the skill.")
-    # skill_key: str = Field(..., min_length=1, max_length=50, description="Unique internal key for the skill.") # If using a separate key
     description: Optional[str] = None
     max_level: int = Field(100, gt=0, description="Maximum level attainable.")
     themes: List[str] = Field(default_factory=list, description="List of theme names/IDs where skill is relevant.")
@@ -36,7 +36,5 @@ class SkillDefinitionRead(SkillDefinitionBase):
     model_config = { # Pydantic v2+
         "from_attributes": True # Enable ORM mode / create from attributes
     }
-    # class Config: # Pydantic v1
-    #     orm_mode = True
 
 # --- END OF FILE app/game_state/schemas/skill_definition_schema.py ---

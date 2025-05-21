@@ -9,7 +9,7 @@ from typing import List, Optional
 from app.game_state.repositories.profession_repository import ProfessionRepository
 from app.game_state.managers.profession_definition_manager import ProfessionManager # Optional: Use if create logic is complex
 from app.game_state.entities.profession_definition_entity import ProfessionDefinitionEntity
-from app.game_state.schemas.profession_schema import ( # Import API Schemas
+from app.api.schemas.profession_schema import ( # Import API Schemas
     ProfessionDefinitionRead,
     ProfessionDefinitionCreate,
     ProfessionDefinitionUpdate,

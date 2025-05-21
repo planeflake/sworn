@@ -89,7 +89,7 @@ class WorldService:
         # Save the DOMAIN entity using the repository
         try:
             saved_domain_entity = await self.repository.save(world_domain_entity)
-            logging.info(f"World '{saved_domain_entity.name}' created and saved with ID: {saved_domain_entity.id}")
+            logging.info(f"World '{saved_domain_entity.name}' created and saved with ID: {saved_domain_entity.entity_id}")
         except Exception as e:
             # Catch potential database errors
             logging.exception(f"Error saving world entity for name '{world_data.name}', theme '{world_data.theme_id}'")
@@ -99,7 +99,7 @@ class WorldService:
         api_schema = await self._convert_entity_to_read_schema(saved_domain_entity)
         if api_schema is None:
             # This indicates a problem converting the saved data back
-            logging.error(f"Failed to convert saved world entity (ID: {saved_domain_entity.id}) back to API schema.")
+            logging.error(f"Failed to convert saved world entity (ID: {saved_domain_entity.entity_id}) back to API schema.")
             raise ValueError("Internal error: Failed to process saved world data.")
         return api_schema
 

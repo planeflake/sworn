@@ -7,11 +7,13 @@ from sqlalchemy.dialects import postgresql as pg
 from typing import List, Optional # Import List for relationship type hint
 from datetime import datetime # Import datetime for type hinting
 from .base import Base
+
 # Import related models for TYPE_CHECKING block
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .location import Location
     from .theme import ThemeDB # For theme relationship
+    from .zone import Zone # For zones relationship
 
 class World(Base):
     """World model for SQLAlchemy ORM"""
@@ -54,12 +56,22 @@ class World(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False # Added timezone=True
     )
 
+
     # --- Relationship to Locations ---
     # One World can have many Locations
     locations: Mapped[List["Location"]] = relationship(
         "Location",
         back_populates="world", # Matches 'world' relationship in Location model
         cascade="all, delete-orphan", # If deleting world deletes its locations
+        lazy="selectin"
+    )
+    
+    # --- Relationship to Zones ---
+    # One World can have many Zones
+    zones: Mapped[List["Zone"]] = relationship(
+        "Zone",
+        back_populates="world", # Matches 'world' relationship in Zone model
+        cascade="all, delete-orphan", # If deleting world deletes its zones
         lazy="selectin"
     )
 

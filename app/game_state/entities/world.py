@@ -4,14 +4,14 @@ from uuid import UUID, uuid4
 from typing import Optional, List, Any, Dict
 from datetime import datetime
 
+from .base import BaseEntity
+
 @dataclass
-class WorldEntity:
+class WorldEntity(BaseEntity):
     """
     Represents a world in the game (Domain Entity).
-    Uses dataclass fields for initialization.
+    Inherits entity_id, name, timestamps, tags, and _metadata from BaseEntity.
     """
-    name: str
-    id: UUID = field(default_factory=uuid4)
     theme_id: Optional[UUID] = None
     day: int = 0  # Renamed from game_day to match API schema
     size: Optional[int] = None
@@ -28,24 +28,23 @@ class WorldEntity:
     weather: Optional[str] = None
     population: int = 0
     dungeons: List[Any] = field(default_factory=list)
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    # created_at, updated_at, tags, and _metadata are now inherited from BaseEntity
 
     def __post_init__(self):
-        # Ensure ID is set if factory wasn't used somehow (defensive)
-        if self.id is None:
-            self.id = uuid4()
-        
-        # Set created_at if not provided
-        if self.created_at is None:
-            self.created_at = datetime.now()
+        # Call the parent's post init if it exists
+        if hasattr(super(), '__post_init__'):
+            super().__post_init__()
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert WorldEntity to a dictionary with safe serialization."""
-        # Manually create dictionary instead of using asdict to avoid inheritance issues
-        data = {
-            "id": str(self.id),
-            "name": self.name,
+        # Get base entity fields first
+        data = super().to_dict()
+        
+        # For backward compatibility, add id field as alias for entity_id
+        data["id"] = data["entity_id"]
+        
+        # Add world-specific fields
+        world_data = {
             "theme_id": str(self.theme_id) if self.theme_id else None,
             "day": self.day,
             "size": self.size,
@@ -62,14 +61,15 @@ class WorldEntity:
             "weather": self.weather,
             "population": self.population,
             "dungeons": self.dungeons,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
         
-        # Handle complex nested objects if needed
-        # For example, if settlements contains custom objects with to_dict:
-        # data['settlements'] = [settlement.to_dict() if hasattr(settlement, 'to_dict') else settlement 
-        #                        for settlement in self.settlements]
+        # Update with world-specific data
+        data.update(world_data)
+        
+        # Handle complex nested objects
+        if hasattr(self, 'settlements') and self.settlements:
+            data['settlements'] = [settlement.to_dict() if hasattr(settlement, 'to_dict') else settlement 
+                                  for settlement in self.settlements]
         
         return data
 

@@ -37,8 +37,7 @@ class ProfessionDefinitionEntity(BaseEntity):
     python_class_override: Optional[str] = None
     archetype_handler: Optional[str] = None
     configuration_data: Dict[str, Any] = field(default_factory=dict)
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: Optional[datetime] = None
+    # created_at and updated_at now come from BaseEntity
 
     # No need for __post_init__ just to set updated_at if created_at is handled okay
     # Keep __post_init__ for actual validation if needed

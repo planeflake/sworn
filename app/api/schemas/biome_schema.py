@@ -5,35 +5,20 @@ from pydantic import BaseModel, Field, field_serializer
 from typing import Optional, Dict
 from datetime import datetime
 
-class BiomeBase(BaseModel):
-    """Base schema for common biome attributes."""
-    biome_id: str = Field(..., min_length=1, max_length=50, 
-                      description="Unique string identifier for the biome.")
-    name: str = Field(..., min_length=1, max_length=100, 
-                 description="Name of the biome.")
-    display_name: str = Field(..., min_length=1, max_length=100, 
-                        description="User-friendly display name for the biome.")
-    description: Optional[str] = Field(None, max_length=1000, 
-                                 description="Detailed description of the biome.")
-    
-    # Gameplay attributes
-    base_movement_modifier: float = Field(1.0, ge=0.1, le=2.0, 
-                                    description="Movement speed multiplier (1.0 = normal)")
-    danger_level_base: int = Field(1, ge=1, le=5, 
-                             description="Base danger level (1-5)")
-    resource_types: Dict[str, float] = Field(default_factory=dict, 
-                                      description="Dictionary of resource types and their abundance multipliers")
-    
-    # Visual representation
-    color_hex: Optional[str] = Field(None, min_length=4, max_length=9, 
-                               description="Hexadecimal color code (e.g., #90EE90)")
-    icon_path: Optional[str] = Field(None, max_length=255, 
-                               description="Path to biome icon image")
-
-class BiomeCreate(BiomeBase):
+class BiomeCreate(BaseModel):
     """Schema for creating a new biome. Can optionally accept an ID for seeding."""
-    id: Optional[uuid.UUID] = Field(None, 
-                               description="Optional ID for the biome, usually for seeding. Will be generated if not provided.")
+    id: Optional[uuid.UUID] = Field(None,
+                               description="Optional UUID for the biome, will be generated if not provided.")
+    biome_id: str = Field(..., description="String identifier for the biome (e.g., 'forest', 'plains').")
+    name: str = Field(..., min_length=1, max_length=100, description="Name of the biome.")
+    display_name: Optional[str] = Field(None, description="User-friendly display name of the biome (defaults to name if not provided).")
+    description: Optional[str] = Field(None, description="Optional description of the biome.")
+    base_movement_modifier: Optional[float] = Field(1.0, description="Movement speed multiplier (1.0 = normal).")
+    danger_level_base: Optional[int] = Field(1, ge=1, le=5, description="Base danger level (1-5).")
+    resource_types: Optional[Dict[str, float]] = Field(default={}, description="Dictionary of resource types and their abundance multipliers.")
+    color_hex: Optional[str] = Field(None, description="Hexadecimal color code for map display.")
+    icon_path: Optional[str] = Field(None, description="Path to biome icon image.")
+
     # Add any other fields specific to creation if needed
 
 class BiomeUpdate(BaseModel):
@@ -47,12 +32,21 @@ class BiomeUpdate(BaseModel):
     color_hex: Optional[str] = Field(None, min_length=4, max_length=9)
     icon_path: Optional[str] = Field(None, max_length=255)
 
-class BiomeRead(BiomeBase):
+class BiomeRead(BaseModel):
     """
     Pydantic Schema for reading/returning a Biome.
     This defines the structure of a Biome object when sent via the API.
     """
     id: uuid.UUID  # The primary key, will be populated from the DB model
+    biome_id: str  # String identifier like 'forest', 'plains', etc.
+    name: str
+    display_name: str
+    description: Optional[str] = None
+    base_movement_modifier: float
+    danger_level_base: int
+    resource_types: Optional[Dict[str, float]] = None
+    color_hex: Optional[str] = None
+    icon_path: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

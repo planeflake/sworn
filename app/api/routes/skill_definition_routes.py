@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.dependencies import get_async_db
 from app.game_state.services.skill_definition_service import SkillDefinitionService
-from app.game_state.schemas.skill_definition_schema import (
+from app.api.schemas.skill_definition_schema import (
     SkillDefinitionRead,
     SkillDefinitionCreate,
     SkillDefinitionUpdate,

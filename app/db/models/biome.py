@@ -2,13 +2,16 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional, Dict
+from typing import Optional, Dict, List, TYPE_CHECKING
 
 from sqlalchemy import String, Text, DateTime, Float, Integer, JSON, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects import postgresql as pg
 
 from .base import Base
+
+if TYPE_CHECKING:
+    from .zone import Zone
 
 class Biome(Base):
     """
@@ -45,6 +48,13 @@ class Biome(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now(), 
                                                      server_default=func.now())
+                                                     
+    # Relationship to zones
+    zones: Mapped[List["Zone"]] = relationship(
+        "Zone",
+        back_populates="biome",
+        lazy="selectin"
+    )
 
     def __repr__(self) -> str:
         return f"<Biome(id={self.id!r}, biome_id={self.biome_id!r}, name={self.name!r})>"

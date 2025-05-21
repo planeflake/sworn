@@ -14,6 +14,7 @@ from typing import Optional, List, TYPE_CHECKING
 # Avoid circular imports by using TYPE_CHECKING
 if TYPE_CHECKING:
     from .character import Character
+    from .zone import Zone
 
 class Settlement(Base):
     """Settlement model for SQLAlchemy ORM"""
@@ -96,4 +97,12 @@ class Settlement(Base):
         onupdate=func.now(),
         server_default=func.now(),
         nullable=True
+    )
+
+
+    # Relationship to the zone this settlement belongs to
+    zone: Mapped["Zone"] = relationship(
+        "Zone",
+        back_populates="settlement_list",  # <- Must match the Zone model
+        lazy="selectin"
     )

@@ -52,9 +52,7 @@ class DomainEntityTemplate(BaseEntity): # <<< Inherit from BaseEntity
     status: TemplateEntityStatus = TemplateEntityStatus.ACTIVE
 
     # --- Date/Time Attributes ---
-    # created_at/updated_at might also be candidates for BaseEntity if ALL entities need them.
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: Optional[datetime] = None
+    # created_at/updated_at are now handled by BaseEntity, no need to declare them here
 
     # --- Collections ---
     tags: List[str] = field(default_factory=list)
@@ -72,16 +70,13 @@ class DomainEntityTemplate(BaseEntity): # <<< Inherit from BaseEntity
         The BaseEntity __post_init__ (if defined) is NOT called automatically.
         Call super().__post_init__() if needed.
         """
+        # BaseEntity now handles created_at and updated_at
+        
         # Example: Basic validation for fields specific to this entity.
         if self.level < 1:
             raise ValueError(f"Level cannot be less than 1 for {self.name} ({self.entity_id})") # Use inherited fields
 
-        # Example: Set 'updated_at' initially if not provided.
-        if self.updated_at is None:
-            # If BaseEntity handles created_at, you might need to access it differently
-            # depending on its definition, but assuming it's directly available:
-            base_created_at = getattr(self, 'created_at', datetime.now(timezone.utc)) # Fallback just in case
-            self.updated_at = base_created_at
+        # We no longer need to set updated_at, it's handled by BaseEntity
 
 
     # --- Representation ---

@@ -49,7 +49,7 @@ async def create_theme(
         
         # Return the response
         return ThemeCreatedResponse(
-            theme_id=str(theme.id), 
+            theme_id=str(theme.entity_id), 
             message="Theme created successfully"
         )
     except Exception as e:

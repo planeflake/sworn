@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Body, Query, status
 from app.game_state.services.profession_service import ProfessionService
-from app.game_state.schemas.profession_schema import (
+from app.api.schemas.profession_schema import (
     ProfessionDefinitionRead,
     ProfessionDefinitionCreate,
     ProfessionDefinitionUpdate,

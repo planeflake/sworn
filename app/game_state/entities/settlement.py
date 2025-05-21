@@ -24,8 +24,7 @@ class SettlementEntity(BaseEntity):
     # Resources mapped as Dict[resource_uuid_str, quantity]
     resources: Dict[str, int] = field(default_factory=dict)
     population: int = 0
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    # created_at and updated_at now come from BaseEntity
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert SettlementEntity to a dictionary with safe serialization."""
@@ -43,9 +42,11 @@ class SettlementEntity(BaseEntity):
             "buildings": self.buildings,
             "resources": string_resources,
             "population": self.population,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+        
+        # Include the base entity fields (including timestamps)
+        base_data = super().to_dict()
+        data.update(base_data)
         
         return data
     

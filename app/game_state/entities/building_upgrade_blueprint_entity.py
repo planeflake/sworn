@@ -2,7 +2,6 @@
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 
 from .base import BaseEntity
@@ -29,11 +28,6 @@ class BuildingUpgradeBlueprintEntity(BaseEntity):
     effects: Dict[str, Any] = field(default_factory=dict)
     is_initial_choice: bool = False
 
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: Optional[datetime] = None
-
-    def __post_init__(self):
-        if self.updated_at is None:
-            self.updated_at = self.created_at
+    # Timestamps are now handled by BaseEntity
 
 # --- END OF FILE app/game_state/entities/building_upgrade_blueprint_entity.py ---

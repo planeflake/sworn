@@ -111,7 +111,7 @@ class ThemeService:
         # Check if theme name already exists
         existing_theme = await self.repository.find_by_name(name)
         if existing_theme:
-             logging.warning(f"[ThemeService] Theme with name '{name}' already exists (ID: {existing_theme.id}).")
+             logging.warning(f"[ThemeService] Theme with name '{name}' already exists (ID: {existing_theme.entity_id}).")
              # Decide whether to return existing or raise error
              raise ValueError(f"Theme with name '{name}' already exists.")
              # return existing_theme # Alternative: return existing one
@@ -123,7 +123,7 @@ class ThemeService:
         try:
             # Save using repository
             saved_entity = await self.repository.save(theme_entity)
-            logging.info(f"[ThemeService] Theme '{saved_entity.name}' created successfully with ID: {saved_entity.id}")
+            logging.info(f"[ThemeService] Theme '{saved_entity.name}' created successfully with ID: {saved_entity.entity_id}")
             return saved_entity
         except Exception as e:
             logging.exception(f"[ThemeService] Error saving new theme '{name}': {e}")

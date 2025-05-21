@@ -1,7 +1,8 @@
 """
-Theme Manager - Contains domain logic for world operations
+Theme Manager - Contains domain logic for theme operations
 """
-from app.game_state.entities.theme import Theme
+from uuid import UUID
+from app.game_state.entities.theme import ThemeEntity
 from app.game_state.repositories.theme_repository import ThemeRepository
 from app.game_state.managers.base_manager import BaseManager
 from sqlalchemy.ext.asyncio import AsyncSession 
@@ -11,23 +12,30 @@ class ThemeManager:
     """Manager class for theme-specific domain logic"""
     
     @staticmethod
-    async def create_theme(theme_id: Optional[str] = None, name: Optional[str] = None, description: Optional[str] = 0, db=AsyncSession) -> Theme:
+    async def create_theme(theme_id: Optional[UUID] = None, name: Optional[str] = None, description: Optional[str] = None, db: AsyncSession = None) -> ThemeEntity:
         """
-        Create a new world entity with default values.
+        Create a new theme entity with the specified values.
         
         Args:
-            world_id: Optional custom ID for the world
+            theme_id: Optional custom ID for the theme
+            name: Name of the theme
+            description: Description of the theme
+            db: Database session
             
         Returns:
-            A new WorldEntity instance
+            A new ThemeEntity instance
         """
         # Use the generic BaseManager.create method
         theme = BaseManager.create(
-            entity_class=Theme,
-            id=theme_id,
+            entity_class=ThemeEntity,
+            entity_id=theme_id,
             name=name,
             description=description
         )
 
-        await ThemeRepository.save(theme,db)  # Save the theme to the repository
+        # Save the theme to the repository if db session is provided
+        if db:
+            repo = ThemeRepository(db)
+            theme = await repo.save(theme)
+            
         return theme

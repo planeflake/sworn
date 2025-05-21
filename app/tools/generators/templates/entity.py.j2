@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional, Any, Union
 from uuid import UUID
+from datetime import datetime, date
 from app.game_state.entities.base import BaseEntity
 
 class {{ entity_name }}Entity(BaseEntity):
@@ -8,32 +9,50 @@ class {{ entity_name }}Entity(BaseEntity):
     """
     def __init__(
         self,
-        id: Union[UUID, str],
+        entity_id: UUID,
+        name: str,
         {% for field in fields %}
+        {% if not field.primary_key and field.name != 'name' and field.name != 'created_at' and field.name != 'updated_at' %}
         {{ field.name }}: {{ field.type_annotation }},
+        {% endif %}
         {% endfor %}
         **kwargs
     ):
-        super().__init__(id)
+        # Pass entity_id and name to BaseEntity constructor
+        # created_at and updated_at are handled by BaseEntity
+        super().__init__(entity_id=entity_id, name=name)
+        # Set standard fields
         {% for field in fields %}
+        {% if not field.primary_key and field.name != 'name' and field.name != 'created_at' and field.name != 'updated_at' %}
         self.{{ field.name }} = {{ field.name }}
-        {% endfor %}
-        {% for relationship in relationships %}
-        {% if relationship.is_collection %}
-        self.{{ relationship.name }} = {{ relationship.name }} or []
-        {% else %}
-        self.{{ relationship.name }} = {{ relationship.name }}
         {% endif %}
         {% endfor %}
+        
+        # Set relationships
+        {% for relationship in relationships %}
+        {% if relationship.is_collection %}
+        self.{{ relationship.name }} = kwargs.get("{{ relationship.name }}", [])
+        {% else %}
+        self.{{ relationship.name }} = kwargs.get("{{ relationship.name }}")
+        {% endif %}
+        {% endfor %}
+        
+        # Set any additional attributes from kwargs, but don't override existing
         for key, value in kwargs.items():
-            setattr(self, key, value)
+            if not hasattr(self, key):
+                setattr(self, key, value)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert entity to a dictionary representation"""
-        data = {
-            "id": str(self.id),
+        # Start with the base entity fields
+        data = super().to_dict()
+        
+        # Add the additional fields
+        additional = {
             {% for field in fields %}
+            {% if not field.primary_key and field.name != 'name' and field.name != 'created_at' and field.name != 'updated_at' %}
             "{{ field.name }}": {% if field.is_uuid %}str(self.{{ field.name }}) if self.{{ field.name }} else None{% else %}self.{{ field.name }}{% endif %},
+            {% endif %}
             {% endfor %}
             {% for relationship in relationships %}
             {% if relationship.is_collection %}
@@ -43,22 +62,46 @@ class {{ entity_name }}Entity(BaseEntity):
             {% endif %}
             {% endfor %}
         }
+        
+        # Merge dictionaries
+        data.update(additional)
         return data
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "{{ entity_name }}Entity":
         """Create entity from dictionary data"""
+        entity_id = UUID(data["entity_id"]) if data.get("entity_id") else None
+        name = data.get("name", "Unnamed Entity")
+        
+        # Extract created_at and updated_at for BaseEntity
+        created_at = data.get("created_at")
+        updated_at = data.get("updated_at")
+        
         {% for field in fields %}
+        {% if not field.primary_key and field.name != 'name' and field.name != 'created_at' and field.name != 'updated_at' %}
         {% if field.is_uuid %}
         {{ field.name }} = UUID(data["{{ field.name }}"]) if data.get("{{ field.name }}") else None
         {% else %}
         {{ field.name }} = data.get("{{ field.name }}")
         {% endif %}
+        {% endif %}
         {% endfor %}
         
-        return cls(
-            id=data["id"],
+        # Create entity instance with all data
+        instance = cls(
+            entity_id=entity_id,
+            name=name,
             {% for field in fields %}
+            {% if not field.primary_key and field.name != 'name' and field.name != 'created_at' and field.name != 'updated_at' %}
             {{ field.name }}={{ field.name }},
+            {% endif %}
             {% endfor %}
         )
+        
+        # Manually set created_at and updated_at if provided
+        if created_at:
+            instance.created_at = created_at
+        if updated_at:
+            instance.updated_at = updated_at
+            
+        return instance

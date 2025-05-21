@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 
 from app.game_state.repositories.skill_definition_repository import SkillDefinitionRepository
 from app.game_state.entities.skill_definition_entity import SkillDefinitionEntity
-from app.game_state.schemas.skill_definition_schema import (
+from app.api.schemas.skill_definition_schema import (
     SkillDefinitionRead,
     SkillDefinitionCreate,
     SkillDefinitionUpdate,

@@ -34,12 +34,10 @@ class StatEntity(BaseEntity):
     modifier: Optional[float] = None
     is_active: bool = True
     
-    # Timestamps
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: Optional[datetime] = None
+    # Timestamps are now handled by BaseEntity
     
     # Additional metadata
-    tags: List[str] = field(default_factory=list)
+    # tags is now inherited from BaseEntity
     metadata: Dict[str, Any] = field(default_factory=dict)
     
     # Relationships
@@ -52,7 +50,6 @@ class StatEntity(BaseEntity):
         elif self.value > self.max_value:
             self.value = self.max_value
             
-        if self.updated_at is None:
-            self.updated_at = self.created_at
+        # BaseEntity handles timestamp setup
 
 # --- END OF FILE app/game_state/entities/stat.py ---

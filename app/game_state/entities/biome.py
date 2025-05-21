@@ -30,8 +30,7 @@ class BiomeEntity(BaseEntity):
     icon_path: Optional[str] = None  # Path to biome icon image
     
     # --- Timestamps ---
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: Optional[datetime] = field(default_factory=lambda: datetime.now(timezone.utc))
+    # created_at and updated_at now come from BaseEntity
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert BiomeEntity to a dictionary with safe serialization."""
@@ -47,9 +46,11 @@ class BiomeEntity(BaseEntity):
             "resource_types": self.resource_types,
             "color_hex": self.color_hex,
             "icon_path": self.icon_path,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+        
+        # Include the base entity fields (including timestamps)
+        base_data = super().to_dict()
+        data.update(base_data)
         
         return data
 
