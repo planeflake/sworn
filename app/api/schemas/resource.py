@@ -1,4 +1,4 @@
-# app/api/schemas/resource.py
+# app/api/schemas/resource_blueprint.py
 import uuid
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any

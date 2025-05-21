@@ -1,4 +1,4 @@
-# --- START OF FILE app/game_state/entities/resource.py ---
+# --- START OF FILE app/game_state/entities/resource_blueprint.py ---
 
 from dataclasses import dataclass, field, KW_ONLY
 from app.game_state.enums.shared import RarityEnum, StatusEnum
@@ -62,4 +62,4 @@ class ResourceEntity(BaseEntity):
         
         return data
 
-# --- END OF FILE app/game_state/entities/resource.py ---
+# --- END OF FILE app/game_state/entities/resource_blueprint.py ---

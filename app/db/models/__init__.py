@@ -6,7 +6,7 @@ from .world import World
 from .theme import ThemeDB
 from .settlement import Settlement
 from .character import Character
-from .resource import Resource
+from app.db.models.resources.resource_blueprint import Resource
 from .season import Season
 from .building_blueprint import BuildingBlueprint
 from .blueprint_stage import BlueprintStage

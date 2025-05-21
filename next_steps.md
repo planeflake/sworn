@@ -1,5 +1,9 @@
 # Development Plan
 
+## Priorities
+
+Change game state entities from @dataclass to pydantic
+
 ## Settlement Management
 1. **Build Components**:
    - Settlement Manager - ✅ COMPLETED
@@ -414,3 +418,4 @@ SkillDefinition components are partially implemented, but still need:
 - Implement factions and inter-settlement relations
 - Create trade routes and economy simulation
 - Add diplomacy and alliance systems
+- Probalistic Yield Modelling
