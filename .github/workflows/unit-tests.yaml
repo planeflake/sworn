@@ -31,4 +31,4 @@ jobs:
       - name: 🧪 Run unit tests
         run: |
           source venv/bin/activate
-          pytest tests/unit --tb=short --disable-warnings
+          pytest tests/ --tb=short --disable-warnings
