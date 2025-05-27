@@ -49,7 +49,9 @@ class Biome(Base):
     updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now(), 
                                                      server_default=func.now())
                                                      
-    # Relationship to zones
+    # DEPRECATED - Relationship to zones
+    # This relationship will be replaced by location_type relationships
+    # in the new LocationInstance-based system
     zones: Mapped[List["Zone"]] = relationship(
         "Zone",
         back_populates="biome",

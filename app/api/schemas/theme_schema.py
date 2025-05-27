@@ -2,7 +2,7 @@
 # (Assuming you've moved your Pydantic schemas to app/api/schemas/)
 
 import uuid
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from datetime import datetime
 
@@ -34,9 +34,9 @@ class ThemeRead(ThemeBase):
     created_at: datetime
     updated_at: datetime # Assuming updated_at is non-nullable in your DB model
 
-    model_config = { # Pydantic v2+
-        "from_attributes": True, # Allows creating this schema from an ORM object or dataclass
-        "json_schema_extra": {
+    model_config = ConfigDict( # Pydantic v2+
+        from_attributes=True, # Allows creating this schema from an ORM object or dataclass
+        json_schema_extra={
             "example": {
                 "id": "dfba10ac-eaa7-4f83-977d-def25746dfb5",
                 "name": "Fantasy Basic",
@@ -45,7 +45,7 @@ class ThemeRead(ThemeBase):
                 "updated_at": "2023-10-28T12:30:00Z"
             }
         }
-    }
+    )
     # For Pydantic v1:
     # class Config:
     #     orm_mode = True

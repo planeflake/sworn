@@ -3,7 +3,7 @@ DEPRECATED: This model is being phased out in favor of using app.game_state.enti
 Use app.game_state.entities.world.World for domain logic and app.api.schemas.world for API validation.
 """
 import warnings
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from datetime import datetime
 from uuid import UUID
@@ -39,5 +39,4 @@ class WorldEntity(BaseModel):
             stacklevel=2
         )
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

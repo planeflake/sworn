@@ -3,7 +3,7 @@
 import uuid
 from typing import Optional, TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, Boolean, Float, Integer, String
+from sqlalchemy import ForeignKey, String
 from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -11,7 +11,7 @@ from app.db.models.base import Base
 
 if TYPE_CHECKING:
     from app.db.models.resources.resource_node_blueprint import ResourceNodeBlueprint
-    from app.db.models.resources.resource_blueprint import Resource
+    from app.db.models.resources.resource_blueprint import ResourceBlueprint
     from app.db.models.theme import ThemeDB
 
 
@@ -20,7 +20,7 @@ class ResourceNodeBlueprintResource(Base):
 
     blueprint_id: Mapped[uuid.UUID] = mapped_column(
         PGUUID(as_uuid=True),
-        ForeignKey("resource_node_blueprints.id", ondelete="CASCADE"),
+        ForeignKey("resource_node_blueprints.id", ondelete="CASCADE"),  # Updated table name
         primary_key=True
     )
 
@@ -55,9 +55,9 @@ class ResourceNodeBlueprintResource(Base):
         lazy="selectin"
     )
 
-    resource: Mapped["Resource"] = relationship(
-        back_populates="blueprint_links",
-        lazy="selectin"
+    resource: Mapped["ResourceBlueprint"] = relationship(
+        "ResourceBlueprint", back_populates="blueprint_links",
+         lazy="selectin"
     )
 
     theme: Mapped[Optional["ThemeDB"]] = relationship(

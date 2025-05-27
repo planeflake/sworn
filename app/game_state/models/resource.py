@@ -7,7 +7,7 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from app.game_state.enums.shared import RarityEnum, StatusEnum
 
 warnings.warn(
@@ -46,10 +46,9 @@ class ResourceApiModel(BaseModel):
             stacklevel=2
         )
 
-    class Config:
-        from_attributes = True
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
             "example": {
                 "resource_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
                 "name": "Iron Ore",
@@ -61,3 +60,4 @@ class ResourceApiModel(BaseModel):
                 "updated_at": "2024-01-10T15:30:00Z",
             }
         }
+    )

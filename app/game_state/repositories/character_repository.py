@@ -32,7 +32,11 @@ class CharacterRepository(BaseRepository[CharacterEntity, Character, UUID]):
         Override to handle special case of character_traits field being a list
         """
         model_dict = await super()._entity_to_model_dict(entity, is_new)
-        
+
+        # Ensure 'id' is included if 'entity_id' exists
+        if 'id' not in model_dict and getattr(entity, "entity_id", None):
+            model_dict["id"] = entity.entity_id
+
         # Handle character_traits which needs to be a list of enum values
         if hasattr(entity, "traits") and "character_traits" not in model_dict:
             model_dict["character_traits"] = entity.traits if entity.traits else []

@@ -4,7 +4,7 @@ from app.api.schemas.character import CharacterCreate, CharacterTraitsUpdate, Ad
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.dependencies import get_async_db 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
@@ -21,16 +21,16 @@ class CharacterRead(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime]
 
-    class Config:
-        from_attributes = True
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
             "example": {
                 "name": f"test_Character_{random.randint(1, 1000)}",
                 "world_id": "9368e202-a217-464c-953d-78ea89dacb01",
                 "description": "test character",
             }
         }
+    )
 
 class CharacterCreatedResponse(BaseModel):
     """Response model for Character creation"""
@@ -42,10 +42,9 @@ class CharacterCreatedResponse(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime]
 
-    class Config:
-        from_attributes = True
-
-        json_schema_extra = {
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
             "example": {
                 "Character": {
                     "name": f"test_Character_{random.randint(1, 1000)}",
@@ -55,6 +54,7 @@ class CharacterCreatedResponse(BaseModel):
                 "message": "Character created successfully"
             }
         }
+    )
 
 class CharacterOutputResponse(BaseModel):
     """Response model for character output"""

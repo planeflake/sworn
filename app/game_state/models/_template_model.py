@@ -8,7 +8,7 @@ from datetime import datetime, date, time
 from typing import Optional, List, Dict, Any
 
 # --- Pydantic Imports ---
-from pydantic import BaseModel, Field, EmailStr, HttpUrl, field_validator, model_validator
+from pydantic import BaseModel, Field, EmailStr, HttpUrl, field_validator, model_validator, ConfigDict
 
 # --- Import API Enums & Other API Models ---
 # Use Enums defined for the API layer (might be same as domain enums)
@@ -23,7 +23,7 @@ class ExampleStatusEnum(enum.Enum): # Placeholder definition
 class RelatedApiModel(BaseModel): # Placeholder definition
     id: uuid.UUID
     name: str
-    class Config: from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- API Model Definition ---
 # Rename 'TemplateApiModel'
@@ -68,12 +68,13 @@ class TemplateApiModel(BaseModel):
     updated_at: Optional[datetime] = Field(None, description="Read-only timestamp")
 
     # --- Pydantic Configuration ---
-    class Config:
+    model_config = ConfigDict(
         # Essential for creating API model from Domain Entity or DB Model attributes
-        from_attributes = True
+        from_attributes=True,
 
         # Essential if using aliases for validation (e.g., 'entity_id' -> 'id')
-        populate_by_name = True
+        populate_by_name=True
+    )
 
         # Optional: Customize JSON schema generation
         # json_schema_extra = {

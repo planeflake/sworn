@@ -16,6 +16,7 @@ from app.api.routes.building_blueprint_routes import router as building_blueprin
 from app.api.routes.building_upgrade_blueprint_routes import router as building_upgrade_blueprint_router
 from app.api.routes.biome_routes import router as biome_router
 from app.api.routes.zone_routes import router as zone_router
+from app.api.routes.location import location_type_router, location_router
 
 #from app.api.routes.building_routes import router as building_router
 #from app.api.routes.item_routes import router as item_router
@@ -54,6 +55,8 @@ fastapi.include_router(building_blueprint_router, prefix="/api/v1/building-bluep
 fastapi.include_router(building_upgrade_blueprint_router, prefix="/api/v1/building-upgrade-blueprints", tags=["Building Upgrade Blueprints"])
 fastapi.include_router(biome_router, prefix="/api/v1/biomes", tags=["Biomes"])
 fastapi.include_router(zone_router, prefix="/api/v1/zones", tags=["Zones"])
+fastapi.include_router(location_type_router, prefix="/api/v1/location-types", tags=["Location Types"])
+fastapi.include_router(location_router, prefix="/api/v1/locations", tags=["Locations"])
 #app.include_router(building_router,   prefix="/api/v1", tags=["building"])
 #app.include_router(item_router,       prefix="/api/v1", tags=["item"])
 

@@ -2,7 +2,7 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, TYPE_CHECKING
 
 from sqlalchemy import String, Integer, ForeignKey, DateTime, func
 from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
@@ -10,6 +10,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.models.base import Base
 
+if TYPE_CHECKING:
+    from app.db.models.resources.resource_blueprint import ResourceBlueprint
 
 class ResourceInstance(Base):
     __tablename__ = "resource_instances"
@@ -22,9 +24,14 @@ class ResourceInstance(Base):
 
     resource_id: Mapped[uuid.UUID] = mapped_column(
         PGUUID(as_uuid=True),
-        ForeignKey("resource_blueprint.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
+        ForeignKey("resources.id", ondelete="CASCADE"),
+        nullable=False
+    )
+
+    resource: Mapped["ResourceBlueprint"] = relationship(
+        "ResourceBlueprint",
+        back_populates="instances",
+        lazy="selectin"
     )
 
     resource_count: Mapped[int] = mapped_column(
@@ -62,9 +69,6 @@ class ResourceInstance(Base):
         onupdate=func.now(),
         server_default=func.now()
     )
-
-    # Optional: backref if needed from ResourceBlueprint
-    resource = relationship("ResourceBlueprint", back_populates="instances", lazy="selectin")
 
     def __repr__(self) -> str:
         return f"<ResourceInstance(id={self.id}, resource={self.resource_id}, count={self.resource_count}, owner={self.owner_type}:{self.owner_id})>"

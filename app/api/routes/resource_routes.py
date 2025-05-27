@@ -6,7 +6,7 @@ from app.game_state.enums.shared import RarityEnum, StatusEnum
 from app.api.schemas.resource import ResourceRead, ResourceCreate
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.dependencies import get_async_db
-from pydantic import BaseModel, Field 
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 from uuid import UUID,uuid4
 import logging
@@ -22,8 +22,8 @@ class ResourceCreatePayload(BaseModel):
     status: StatusEnum = StatusEnum.ACTIVE
     theme_id: UUID 
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "name": "Ancient Oak Wood",
                 "theme_id": "dfba10ac-eaa7-4f83-977d-def25746dfb5",
@@ -33,6 +33,7 @@ class ResourceCreatePayload(BaseModel):
                 "status": "Active" 
             }
         }
+    )
 
 class ResourceListResponse(BaseModel):
     resources: List[ResourceRead]

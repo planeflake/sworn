@@ -61,7 +61,9 @@ class Faction(Base):
     _metadata: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True, default=lambda: {})
     tags: Mapped[Optional[List[str]]] = mapped_column(ARRAY(String), nullable=True, default=lambda: [])
 
-    # ✅ One faction controls many zones
+    # DEPRECATED - One faction controls many zones
+    # This relationship will be replaced by location-based faction control
+    # in the new LocationInstance-based system
     zones = relationship("Zone", back_populates="faction", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:

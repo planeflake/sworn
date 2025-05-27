@@ -18,7 +18,7 @@ from app.game_state.enums.item import ItemStatus, ItemType
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .character import Character
-    # from .location import Location # If items can be directly at locations
+    from .location_instance import LocationInstance # If items can be directly at locations
     # from .item_definition import ItemDefinition # If you create item definitions
 
 class Item(Base):
@@ -64,7 +64,7 @@ class Item(Base):
         index=True
     )
     # container_item_id: Mapped[Optional[uuid.UUID]] = mapped_column(pgUUID(as_uuid=True), ForeignKey("items.id", name="fk_item_container_id", ondelete="CASCADE"), nullable=True, index=True)
-    # location_id: Mapped[Optional[uuid.UUID]] = mapped_column(pgUUID(as_uuid=True), ForeignKey("locations.id", name="fk_item_location_id", ondelete="SET NULL"), nullable=True, index=True)
+    # location_id: Mapped[Optional[uuid.UUID]] = mapped_column(pg.UUID(as_uuid=True), ForeignKey("location_entities.id", name="fk_item_location_id", ondelete="SET NULL"), nullable=True, index=True)
 
     # --- Relationships ---
     owner: Mapped[Optional["Character"]] = relationship(
@@ -74,7 +74,7 @@ class Item(Base):
     )
     # container: Mapped[Optional["Item"]] = relationship("Item", remote_side=[id], back_populates="items_in_container", foreign_keys=[container_item_id])
     # items_in_container: Mapped[List["Item"]] = relationship("Item", back_populates="container")
-    # location: Mapped[Optional["Location"]] = relationship("Location", foreign_keys=[location_id], back_populates="items_at_location")
+    # location: Mapped[Optional["LocationInstance"]] = relationship("LocationInstance", foreign_keys=[location_id], back_populates="items_at_location")
 
     # --- Complex Data ---
     _metadata: Mapped[Optional[Dict[str, Any]]] = mapped_column(

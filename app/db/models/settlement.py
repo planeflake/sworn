@@ -1,4 +1,7 @@
-# --- START OF FILE app/db/models/settlement.py ---
+# --- DEPRECATED FILE - DO NOT USE FOR NEW CODE ---
+# Settlements should now be represented as LocationInstance objects with appropriate location_type.
+#
+# This file is kept temporarily for compatibility during transition.
 
 from sqlalchemy import Integer, String, DateTime, func, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -17,7 +20,10 @@ if TYPE_CHECKING:
     from .zone import Zone
 
 class Settlement(Base):
-    """Settlement model for SQLAlchemy ORM"""
+    """
+    DEPRECATED - Use LocationInstance with appropriate location_type instead.
+    This model is kept only for backward compatibility during transition.
+    """
     __tablename__ = 'settlements'
 
     # --- Fields REQUIRED in Python __init__ (Non-Defaults first) ---

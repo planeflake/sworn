@@ -1,21 +1,15 @@
+# --- DEPRECATED FILE - DO NOT USE FOR NEW CODE ---
+# Zones should now be represented as LocationInstance objects with appropriate location_type.
+#
+# This file is kept temporarily for compatibility during transition.
+
 import uuid
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from app.game_state.enums.zones import ZonalStateEnum
 
-from sqlalchemy import (
-    String,
-    Text,
-    DateTime,
-    ForeignKey,
-    UniqueConstraint,
-    func
-)
-from sqlalchemy.orm import (
-    Mapped,
-    mapped_column,
-    relationship
-)
+# Import needed for compatibility - NOT FOR NEW CODE
+from sqlalchemy import String, Text, DateTime, ForeignKey, UniqueConstraint, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.sql import text
@@ -23,7 +17,12 @@ from sqlalchemy.sql import text
 from .base import Base
 from app.game_state.enums.shared import StatusEnum
 
+# Define as class but mark as deprecated
 class Zone(Base):
+    """
+    DEPRECATED - Use LocationInstance with appropriate location_type instead.
+    This model is kept only for backward compatibility during transition.
+    """
     __tablename__ = 'zones'
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -67,12 +66,12 @@ class Zone(Base):
     _metadata: Mapped[Optional[Dict[str, Any]]] = mapped_column(pg.JSONB, nullable=True, default=lambda: {})
     tags: Mapped[Optional[List[str]]] = mapped_column(pg.ARRAY(String), nullable=True, default=lambda: [])
 
-    # ✅ Relationships
+    # Add the relationship to World
     world = relationship("World", back_populates="zones")
     biome = relationship("Biome", back_populates="zones")
     settlement_list = relationship("Settlement", back_populates="zone", cascade="all, delete-orphan")
 
-    # ✅ This is a many-to-one relationship: each zone is controlled by one faction
+    # This is a many-to-one relationship: each zone is controlled by one faction
     faction = relationship("Faction", back_populates="zones", foreign_keys=[controlling_faction])
 
     __table_args__ = (

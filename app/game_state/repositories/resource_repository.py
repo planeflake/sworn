@@ -8,7 +8,7 @@ from typing import List, Optional
 # Import base repository
 from .base_repository import BaseRepository
 # Import DB Model and Domain Entity
-from app.db.models.resources.resource_blueprint import Resource as ResourceDbModel
+from app.db.models.resources.resource_blueprint import ResourceBlueprint as ResourceDbModel
 from app.game_state.entities.resource import ResourceEntity
 # Import Enums if needed for specific queries (less common here)
 # from app.game_state.enums.shared import StatusEnum

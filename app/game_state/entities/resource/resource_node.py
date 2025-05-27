@@ -14,13 +14,16 @@ class ResourceNodeResourceEntity(BaseModel):
     amount_max: int = 1
     purity: float = 1.0
     rarity: Optional[str] = "common"
-    _metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return self.model_dump()
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "ResourceNodeResourceEntity":
+        # Handle old _metadata key for backward compatibility
+        if "_metadata" in data and "metadata" not in data:
+            data["metadata"] = data.pop("_metadata")
         return cls(**data)
 
 
@@ -34,7 +37,7 @@ class ResourceNodeEntity(BaseModel):
     area_id: Optional[uuid.UUID] = None
     depleted: bool = False
     status: StatusEnum = StatusEnum.PENDING
-    _metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
     tags: Optional[List[str]] = Field(default_factory=list)
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
@@ -46,4 +49,7 @@ class ResourceNodeEntity(BaseModel):
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "ResourceNodeEntity":
+        # Handle old _metadata key for backward compatibility
+        if "_metadata" in data and "metadata" not in data:
+            data["metadata"] = data.pop("_metadata")
         return cls(**data)

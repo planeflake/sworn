@@ -4,6 +4,7 @@ import asyncio
 import os
 from dotenv import load_dotenv
 import logging
+from contextlib import asynccontextmanager
 
 load_dotenv()  # Load environment variables from .env file
 
@@ -80,6 +81,7 @@ async_session_local = async_sessionmaker(
 )
 
 # Context manager for safely using a session
+@asynccontextmanager
 async def get_db_session():
     """
     A context manager that provides a database session and handles cleanup properly.

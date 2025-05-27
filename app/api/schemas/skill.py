@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from uuid import UUID
 
 class SkillRead(BaseModel):
@@ -9,8 +9,7 @@ class SkillRead(BaseModel):
     category: str = Field(None, description="Current game day in the world.")
     max_level: int
 
-    class Config:
-        has_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SkillCreate(BaseModel):
     id: UUID = Field(None, description="Unique ID of the world.")
@@ -19,9 +18,9 @@ class SkillCreate(BaseModel):
     category: str = Field(None, description="Current game day in the world.")
     max_level: int = Field(None, description="Maximum level of the skill.", ge=1)
 
-    model_config = {
-        "from_attributes": True,
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
             "example": {
                 "name": "Swordsmanship",
                 "description": "Improves skill with swords and blades.",
@@ -29,7 +28,7 @@ class SkillCreate(BaseModel):
                 "max_level": 10
             }
         }
-    }
+    )
 
 class SkillCreateResponse(BaseModel):
     message: str

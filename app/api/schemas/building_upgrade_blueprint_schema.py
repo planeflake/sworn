@@ -1,7 +1,7 @@
 # --- START OF FILE app/api/schemas/building_upgrade_blueprint_schema.py ---
 
 import uuid
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
@@ -37,7 +37,6 @@ class BuildingUpgradeBlueprintRead(BuildingUpgradeBlueprintBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    model_config = {"from_attributes": True}
-    # class Config: orm_mode = True # Pydantic v1
+    model_config = ConfigDict(from_attributes=True)
 
 # --- END OF FILE app/api/schemas/building_upgrade_blueprint_schema.py ---

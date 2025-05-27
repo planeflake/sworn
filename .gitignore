@@ -6991,3 +6991,9 @@ mcp/integration_test.py
 .idea/vcs.xml
 app/.DS_Store
 .DS_Store
+entities_list.md
+location_system_implementation.md
+location_types.json
+refactor_location_structure.md
+utils/fix_pydantic_imports.py
+utils/migrate_to_locations.py

@@ -3,7 +3,7 @@ DEPRECATED: This model is being phased out in favor of using app.game_state.enti
 Use app.game_state.entities.settlement.Settlement for new code.
 """
 import warnings
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from uuid import UUID
 from datetime import datetime
 from typing import Optional, List, Dict, Any
@@ -38,5 +38,4 @@ class SettlementEntity(BaseModel):
             stacklevel=2
         )
     
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)

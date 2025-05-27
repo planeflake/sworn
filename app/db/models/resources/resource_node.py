@@ -1,10 +1,10 @@
 import uuid
 from datetime import datetime
-from typing import Optional, List, Dict, Any, TYPE_CHECKING
+from typing import Optional, List, Dict, Any, TYPE_CHECKING, ForwardRef
 
 from sqlalchemy import (
     String, Text, Boolean,
-    DateTime, Enum, func
+    DateTime, Enum, func, ForeignKey
 )
 
 from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB, ARRAY
@@ -15,9 +15,11 @@ from app.game_state.enums.shared import StatusEnum
 
 if TYPE_CHECKING:
     from app.db.models.resources.resource_node_link import ResourceNodeResource
+    from app.db.models.location_instance import LocationInstance
 
 class ResourceNode(Base):
     __tablename__ = "resource_nodes"
+    __table_args__ = {'extend_existing': True}
 
     id: Mapped[uuid.UUID] = mapped_column(
         PGUUID(as_uuid=True),
@@ -79,12 +81,27 @@ class ResourceNode(Base):
         default=list
     )
 
+    # Location relationship - links this node to a specific location
+    location_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("location_entities.id", name="fk_resource_node_location"),
+        nullable=True,
+        index=True
+    )
+
     # One-to-many relationship to the edge model (ResourceNodeResource)
     resource_links: Mapped[List["ResourceNodeResource"]] = relationship(
         "ResourceNodeResource",
         back_populates="node",
         cascade="all, delete-orphan",
         lazy="selectin"
+    )
+    
+    # Relationship to the location - use fully qualified string reference to avoid circular imports
+    location: Mapped[Optional["LocationInstance"]] = relationship(
+        "app.db.models.location_instance.LocationInstance",
+        lazy="selectin",
+        foreign_keys=[location_id]
     )
 
     def __repr__(self) -> str:

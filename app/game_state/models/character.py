@@ -1,6 +1,6 @@
 # --- START - app/game_state/models/character.py ---
 
-from pydantic import BaseModel, Field, field_validator # Import Field for aliasing/config, field_validator if needed
+from pydantic import BaseModel, Field, field_validator, ConfigDict # Import Field for aliasing/config, field_validator if needed
 from typing import List, Optional, Dict, Any
 from uuid import UUID
 from datetime import datetime
@@ -19,16 +19,14 @@ class StatApiModel(BaseModel):
     value: Any # Or be more specific like int/float if possible
     # Omit stat_id if not needed in API response
 
-    class Config:
-        from_attributes = True # Allow creating from StatEntity attributes
+    model_config = ConfigDict(from_attributes=True) # Allow creating from StatEntity attributes
 
 class EquipmentApiModel(BaseModel):
     slot: str
     item_name: str # Example: Show name instead of just ID
     item_id: UUID
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ItemApiModel(BaseModel):
     item_id: UUID
@@ -36,16 +34,14 @@ class ItemApiModel(BaseModel):
     description: Optional[str] = None
     # Might include quantity if relevant for inventory display
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SkillApiModel(BaseModel):
     skill_id: UUID
     name: str
     level: Optional[int] = None # Example: API might show skill level
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # --- Main Character API Model ---
 class CharacterApiModel(BaseModel):
@@ -79,14 +75,15 @@ class CharacterApiModel(BaseModel):
     last_login: Optional[datetime] = None # Expose if relevant
 
     # --- Pydantic Configuration ---
-    class Config:
+    model_config = ConfigDict(
         # Allows creating this model from attributes of another object
         # (like the CharacterEntity domain object or the Character ORM object)
-        from_attributes = True
-
+        from_attributes=True,
+        
         # Allows populating the model using either the field name OR its alias.
         # Crucial for making `validation_alias='entity_id'` work for the `id` field.
-        populate_by_name = True
+        populate_by_name=True
+    )
 
         # Example: Rename all fields for JSON output automatically (e.g., camelCase)
         # def alias_generator(field_name: str) -> str:

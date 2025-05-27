@@ -11,7 +11,7 @@ class ResourceBlueprintEntity(BaseModel):
     description: Optional[str] = None
     theme_id: Optional[uuid.UUID] = None
     rarity: Optional[str] = None
-    _metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
     tags: Optional[List[str]] = Field(default_factory=list)
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

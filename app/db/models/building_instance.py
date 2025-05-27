@@ -1,4 +1,7 @@
 # --- START OF FILE app/db/models/building_instance.py ---
+# NOTE: This file uses deprecated Settlement model references that will be
+# replaced with LocationInstance references during the transition to the
+# new location-based system.
 import uuid
 from datetime import datetime
 from typing import Optional, List, Dict, Any
@@ -18,7 +21,8 @@ from app.game_state.entities.character import CharacterEntity # Assuming this is
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .building_blueprint import BuildingBlueprint
-    from .settlement import Settlement
+    from .settlement import Settlement  # DEPRECATED - Will be replaced with LocationInstance
+    from .location_instance import LocationInstance  # Future replacement for Settlement
     # from .blueprint_stage_feature import BlueprintStageFeature
     # from .character import Character # For inhabitants/workers
 
@@ -41,12 +45,16 @@ class BuildingInstanceDB(Base): # Suffix with DB to avoid clash with domain enti
     )
     blueprint: Mapped["BuildingBlueprint"] = relationship(lazy="selectin") # No back_populates needed if blueprint doesn't track instances directly
 
+    # DEPRECATED - This will be replaced with location_id referencing LocationInstance
     settlement_id: Mapped[uuid.UUID] = mapped_column(
         pgUUID(as_uuid=True), ForeignKey("settlements.id"), nullable=False, index=True
     )
+    # DEPRECATED - This relationship will be replaced by location relationship
     settlement: Mapped["Settlement"] = relationship(
-        "Settlement", back_populates="building_instances" # Assumes 'building_instances' in Settlement model
+        "Settlement", back_populates="building_instances"
     )
+    
+    # TODO: Add location_id referencing LocationInstance when transitioning from settlements
 
     level: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     status: Mapped[BuildingStatus] = mapped_column(SQLAlchemyEnum(BuildingStatus, name="building_status_enum", create_type=False), nullable=False)

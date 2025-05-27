@@ -19,7 +19,11 @@ if TYPE_CHECKING:
 
 
 class ResourceNodeBlueprint(Base):
-    __tablename__ = "resource_nodes"
+    """
+    SQLAlchemy ORM Model for Resource Node Blueprints.
+    These are templates that can be used to generate resource node instances.
+    """
+    __tablename__ = "resource_node_blueprints"
 
     id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True),

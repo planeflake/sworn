@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status # Added status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.dependencies import get_async_db
 import logging
-from pydantic import BaseModel, Field # Added Field
+from pydantic import BaseModel, Field, ConfigDict # Added Field
 import random
 from app.game_state.services.world_service import WorldService
 from app.game_state.services.settlement_service import SettlementService
@@ -23,9 +23,9 @@ class SettlementRead(BaseModel):
     updated_at: Optional[datetime] = None
 
     # Pydantic V2 config (replaces V1's class Config)
-    model_config = {
-        "from_attributes": True  # Replaces orm_mode = True
-    }
+    model_config = ConfigDict(
+        from_attributes=True  # Replaces orm_mode = True
+    )
 
 class SettlementCreate(BaseModel):
     """Request model for creating a Settlement"""
@@ -36,8 +36,8 @@ class SettlementCreate(BaseModel):
     resources: Optional[Dict[str,int]] = Field(default_factory=dict, description="A dict of resource IDs to add to the settlement.")
 
     # Pydantic V2 config for schema examples
-    model_config = {
-        "json_schema_extra": {
+    model_config = ConfigDict(
+        json_schema_extra={
             "examples": [
                 {
                     "name": "Riverside",
@@ -58,7 +58,7 @@ class SettlementCreate(BaseModel):
                 }
             ]
         }
-    }
+    )
 
 class SettlementCreatedResponse(BaseModel):
     """Response model for Settlement creation"""
@@ -70,9 +70,9 @@ class SettlementOutputResponse(BaseModel):
      settlement: SettlementRead 
      message: str
 
-     model_config = {
-         "from_attributes": True
-     }
+     model_config = ConfigDict(
+         from_attributes=True
+     )
 
 # --- Router ---
 router = APIRouter()
