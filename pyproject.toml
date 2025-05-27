@@ -37,7 +37,8 @@ dependencies = [
     "apscheduler==3.11.0",
     "python-multipart==0.0.20",
     "greenlet>=3.0.0",  # Required for async SQLAlchemy operations
-    "pytest-cov>=4.0.0"
+    "pytest-cov>=4.0.0",
+    "httpx>=0.24.0",
 ]
 
 [project.optional-dependencies]
