@@ -1,11 +1,8 @@
-# .github/workflows/test.yml
 name: Run Unit Tests
 
 on:
   push:
-    branches:
-      - main
-      - dev
+    branches: [main, dev]
   pull_request:
 
 jobs:
@@ -19,16 +16,23 @@ jobs:
       - name: 🐍 Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'  # or your version
+          python-version: '3.11'
 
       - name: 📦 Install dependencies
         run: |
           python -m venv venv
           source venv/bin/activate
           pip install --upgrade pip
-          pip install .
+          pip install . pytest pytest-cov codecov
 
-      - name: 🧪 Run unit tests
+      - name: 🧪 Run unit tests with coverage + JUnit
         run: |
           source venv/bin/activate
-          pytest tests/ --tb=short --disable-warnings
+          pytest --cov=your_package_name --cov-report=xml --junitxml=junit.xml -o junit_family=legacy --tb=short --disable-warnings
+
+      - name: 📤 Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+
+      - name: 📤 Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
