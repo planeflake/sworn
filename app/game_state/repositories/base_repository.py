@@ -71,6 +71,10 @@ class BaseRepository(Generic[EntityType, ModelType, PrimaryKeyType]):
 
         logging.debug(f"[_entity_to_model_dict] Original entity data keys: {list(entity_data.keys())}")
 
+        # Handle entity_id -> id mapping BEFORE filtering
+        if 'entity_id' in entity_data and 'id' in self._model_column_keys and 'id' not in entity_data:
+            entity_data['id'] = entity_data.pop('entity_id')
+
         model_data = {
             key: value for key, value in entity_data.items()
             if key in self._model_column_keys
@@ -83,9 +87,6 @@ class BaseRepository(Generic[EntityType, ModelType, PrimaryKeyType]):
                 if has_uuid_keys:
                     logging.debug(f"[_entity_to_model_dict] Converting UUID keys to strings in field '{key}'")
                     model_data[key] = {str(k): v for k, v in value.items()}
-
-        if 'entity_id' in model_data and 'id' in self._model_column_keys and 'id' not in model_data:
-            model_data['id'] = model_data.pop('entity_id')
 
         if is_new:
             keys_to_remove = set()
@@ -751,5 +752,44 @@ class BaseRepository(Generic[EntityType, ModelType, PrimaryKeyType]):
                 raise
 
         return saved_entities_list
+
+    async def bulk_delete(self, entity_ids: List[PrimaryKeyType]) -> int:
+        """
+        Bulk delete entities by their IDs.
+        Returns the number of entities deleted.
+        """
+        if not entity_ids:
+            logging.warning("[BulkDelete] Received empty entity ID list")
+            return 0
+
+        if not self._pk_attr_names:
+            raise ValueError(f"Cannot bulk delete: Primary key not defined for model {self.model_cls.__name__}")
+
+        logging.info(f"[BulkDelete] Deleting {len(entity_ids)} {self.model_cls.__name__} entities")
+
+        pk_attr_name = next(iter(self._pk_attr_names), None)
+        if not pk_attr_name:
+            raise ValueError(f"Cannot determine primary key for {self.model_cls.__name__}")
+
+        pk_column = getattr(self.model_cls, pk_attr_name, None)
+        if pk_column is None:
+            raise ValueError(f"Primary key column '{pk_attr_name}' not found on model {self.model_cls.__name__}")
+
+        try:
+            # Use SQLAlchemy's delete with WHERE IN clause
+            from sqlalchemy import delete
+            stmt = delete(self.model_cls).where(pk_column.in_(entity_ids))
+            
+            result = await self.db.execute(stmt)
+            await self.db.flush()
+            
+            deleted_count = result.rowcount or 0
+            logging.info(f"[BulkDelete] Successfully deleted {deleted_count} entities")
+            return deleted_count
+
+        except Exception as e:
+            logging.error(f"[BulkDelete] Error during bulk delete: {e}", exc_info=True)
+            await self.db.rollback()
+            raise
 
 # --- END OF FILE app/game_state/repositories/base_repository.py ---

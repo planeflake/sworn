@@ -19,7 +19,7 @@ class BuildingUpgradeBlueprintEntityPydantic(BaseEntityPydantic):
     resource_cost: Dict[UUID, int] = Field(default_factory=dict)  # resource_id (UUID) -> count
     profession_cost: Dict[UUID, int] = Field(default_factory=dict)  # profession_definition_id (UUID) -> count
     duration_days: int = 1
-
+    parent_blueprint_id: Optional[UUID] = Field(default_factory=UUID)
     effects: Dict[str, Any] = Field(default_factory=dict)
     is_initial_choice: bool = False
     

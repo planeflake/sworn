@@ -40,6 +40,11 @@ class BuildingUpgradeBlueprint(Base):
         comment="Profession costs (worker count). E.g., {'<profession_def_uuid_str>': 1}"
     )
     duration_days: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default='1')
+    
+    # Additional fields to match entity
+    parent_blueprint_id: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
+    stage: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default='1')
+    construction_time: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default='1')
 
     effects: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
     is_initial_choice: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default='false')

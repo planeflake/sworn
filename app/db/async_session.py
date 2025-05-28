@@ -32,7 +32,7 @@ def get_engine():
     """
     try:
         # Get current event loop or create one
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
     except RuntimeError:
         # No event loop in current thread, create a new one
         loop = asyncio.new_event_loop()

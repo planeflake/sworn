@@ -31,6 +31,9 @@ def mock_db_session():
     mock_result.scalars.return_value = mock_scalars
     mock_scalars.all.return_value = []
     
+    # Fix synchronous methods that shouldn't return coroutines
+    mock_session.add = MagicMock(return_value=None)  # add is synchronous
+    
     return mock_session
 
 @pytest_asyncio.fixture

@@ -24,6 +24,11 @@ class BuildingUpgradeBlueprintEntity(BaseEntity):
     resource_cost: Dict[uuid.UUID, int] = field(default_factory=dict) # resource_id (UUID) -> count
     profession_cost: Dict[uuid.UUID, int] = field(default_factory=dict) # profession_definition_id (UUID) -> count
     duration_days: int = 1
+    
+    # Additional fields expected by tests
+    parent_blueprint_id: Optional[str] = None
+    stage: int = 1
+    construction_time: int = 1
 
     effects: Dict[str, Any] = field(default_factory=dict)
     is_initial_choice: bool = False

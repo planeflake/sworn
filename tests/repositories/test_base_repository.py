@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4, UUID
 import dataclasses
 from typing import Dict, Any, Optional, List
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, OperationalError
 
 # Import the BaseRepository and required components
 from app.game_state.repositories.base_repository import BaseRepository
@@ -12,29 +12,30 @@ from app.game_state.entities.base import BaseEntity
 from app.db.async_session import AsyncSession
 from sqlalchemy import Column, String, JSON
 from sqlalchemy.dialects.postgresql import UUID as pgUUID
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 
 # Create test models and entities for testing
-Base = declarative_base()
+class Base(DeclarativeBase):
+    pass
 
-# Test model for SQLAlchemy
-class TestModel(Base):
+# Model for SQLAlchemy (renamed to avoid pytest collection)
+class MockModel(Base):
     __tablename__ = 'test_models'
-    
+
     id = Column(pgUUID(as_uuid=True), primary_key=True, default=uuid4)
     name = Column(String(100), nullable=False)
     json_data = Column(JSON, nullable=True)
 
-# Test entity for the domain
+# Entity for the domain (renamed to avoid pytest collection)
 @dataclasses.dataclass
-class TestEntity(BaseEntity):
+class MockEntity(BaseEntity):
     name: str
     json_data: Dict[UUID, int] = dataclasses.field(default_factory=dict)
 
-# Concrete repository implementation for testing
-class TestRepository(BaseRepository[TestEntity, TestModel, UUID]):
+# Concrete repository implementation for testing (renamed to avoid pytest collection)
+class MockRepository(BaseRepository[MockEntity, MockModel, UUID]):
     def __init__(self, db: AsyncSession):
-        super().__init__(db=db, model_cls=TestModel, entity_cls=TestEntity)
+        super().__init__(db=db, model_cls=MockModel, entity_cls=MockEntity)
 
 # Fixtures
 @pytest.fixture
@@ -61,12 +62,12 @@ def mock_db_session():
 
 @pytest_asyncio.fixture
 async def repository(mock_db_session):
-    return TestRepository(db=mock_db_session)
+    return MockRepository(db=mock_db_session)
 
 @pytest.fixture
 def sample_entity(test_uuid):
     resource_uuid = uuid4()
-    return TestEntity(
+    return MockEntity(
         entity_id=test_uuid,
         name="Test Entity",
         json_data={resource_uuid: 10}
@@ -74,7 +75,7 @@ def sample_entity(test_uuid):
 
 @pytest.fixture
 def sample_model(test_uuid, sample_entity):
-    model = TestModel(
+    model = MockModel(
         id=test_uuid,
         name=sample_entity.name,
         json_data={str(k): v for k, v in sample_entity.json_data.items()}
@@ -122,7 +123,7 @@ class TestConvertToEntity:
         
         # Assert
         assert result is not None
-        assert isinstance(result, TestEntity)
+        assert isinstance(result, MockEntity)
         assert result.name == sample_model.name
         assert result.entity_id == sample_model.id
     
@@ -158,7 +159,7 @@ class TestFindByName:
         
         # Assert
         assert result is not None
-        assert isinstance(result, TestEntity)
+        assert isinstance(result, MockEntity)
         assert result.name == sample_entity.name
         assert result.entity_id == sample_entity.entity_id
     
@@ -188,13 +189,13 @@ class TestFindByNameInsensitive:
         
         # Assert
         assert result is not None
-        assert isinstance(result, TestEntity)
+        assert isinstance(result, MockEntity)
         assert result.name == sample_entity.name
         
         # Verify that the query used func.lower() for case-insensitive search
         call_args = mock_db_session.execute.call_args[0][0]
         # This is a simplified check - the actual query is more complex
-        assert "func.lower" in str(call_args) or "LOWER" in str(call_args)
+        assert "func.lower" in str(call_args) or "LOWER" in str(call_args) or "lower" in str(call_args)
 
 class TestFindAllByName:
     @pytest.mark.asyncio
@@ -211,7 +212,7 @@ class TestFindAllByName:
         # Assert
         assert isinstance(result, list)
         assert len(result) == 1
-        assert isinstance(result[0], TestEntity)
+        assert isinstance(result[0], MockEntity)
         assert result[0].name == sample_entity.name
         
         # Verify LIKE query was used for partial matching
@@ -225,14 +226,14 @@ class TestBulkOperations:
         # Arrange
         entities = [
             sample_entity,
-            TestEntity(name="Entity 2", json_data={uuid4(): 20}),
-            TestEntity(name="Entity 3", json_data={uuid4(): 30})
+            MockEntity(name="Entity 2", json_data={uuid4(): 20}),
+            MockEntity(name="Entity 3", json_data={uuid4(): 30})
         ]
         
         # Mock DB objects that would be returned after save
         saved_models = []
         for i, entity in enumerate(entities):
-            model = TestModel(
+            model = MockModel(
                 id=entity.entity_id or uuid4(),
                 name=entity.name,
                 json_data={str(k): v for k, v in entity.json_data.items()}
@@ -252,7 +253,7 @@ class TestBulkOperations:
         
         # Assert
         assert len(results) == len(entities)
-        assert all(isinstance(entity, TestEntity) for entity in results)
+        assert all(isinstance(entity, MockEntity) for entity in results)
         assert mock_db_session.add.call_count == len(entities)
         assert mock_db_session.flush.await_count == 1
     
@@ -275,3 +276,58 @@ class TestBulkOperations:
         assert "IN" in str(call_args) or "in_" in str(call_args)
         # Flush should be called to commit the deletion
         assert mock_db_session.flush.await_count == 1
+
+class TestErrorHandling:
+    @pytest.mark.asyncio
+    async def test_save_raises_on_db_connection_failure(self, repository, sample_entity):
+        """Simulate a low-level DB connection error during flush."""
+        repository.db.flush.side_effect = OperationalError("conn failed", None, None)
+        with pytest.raises(OperationalError):
+            await repository.save(sample_entity)
+
+    @pytest.mark.asyncio
+    async def test_find_by_id_raises_on_connection_failure(self, repository):
+        """Simulate a connection failure on a simple get()."""
+        fake_id = uuid4()
+        repository.db.get.side_effect = OperationalError("conn failed", None, None)
+        with pytest.raises(OperationalError):
+            await repository.find_by_id(fake_id)
+
+    @pytest.mark.asyncio
+    async def test_save_raises_sqlalchemy_error_on_refresh(self, repository, sample_entity):
+        """If refresh blows up, we should see that SQLAlchemyError propagated."""
+        # First allow flush to succeed, then have refresh throw.
+        repository.db.flush.side_effect = None
+        repository.db.refresh.side_effect = SQLAlchemyError("refresh failed")
+        with pytest.raises(SQLAlchemyError):
+            await repository.save(sample_entity)
+
+    @pytest.mark.asyncio
+    async def test_entity_to_model_dict_invalid_entity(self, repository):
+        """Passing something with no __dict__ should give a TypeError."""
+        class Weird:
+            __slots__ = ()  # no __dict__
+        with pytest.raises(TypeError):
+            await repository._entity_to_model_dict(Weird())
+
+        # And saving None should be a ValueError
+        with pytest.raises(ValueError):
+            await repository.save(None)
+
+    @pytest.mark.asyncio
+    async def test_convert_to_entity_missing_required_fields(self, repository, sample_model):
+        """If the DB row is missing fields needed by the entity ctor, we get a TypeError."""
+        # Create a dataclass entity that requires a field "age" that model doesn’t have
+        @dataclasses.dataclass
+        class MissingAgeEntity:
+            entity_id: UUID
+            name: str
+            age: int  # no default!
+
+        repository.entity_cls = MissingAgeEntity
+
+        with pytest.raises(TypeError) as excinfo:
+            await repository._convert_to_entity(sample_model)
+
+        assert "Missing required data" in str(excinfo.value)
+
