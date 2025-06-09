@@ -17,6 +17,13 @@ from app.api.routes.building_upgrade_blueprint_routes import router as building_
 from app.api.routes.biome_routes import router as biome_router
 from app.api.routes.zone_routes import router as zone_router
 from app.api.routes.location import location_type_router, location_router
+from app.api.routes.action_routes import router as action_router
+from app.api.routes.action_template_routes import router as action_template_router
+from app.api.routes.tool_tier_routes import router as tool_tier_router
+from app.api.routes.location.location_sub_types import router as location_sub_types_router
+from app.api.routes.resource_node_blueprint_routes import router as resource_node_blueprint_router
+from app.api.routes.resource_node_routes import router as resource_node_router
+from app.api.routes.faction_routes import router as faction_router
 
 #from app.api.routes.building_routes import router as building_router
 #from app.api.routes.item_routes import router as item_router
@@ -57,8 +64,15 @@ fastapi.include_router(biome_router, prefix="/api/v1/biomes", tags=["Biomes"])
 fastapi.include_router(zone_router, prefix="/api/v1/zones", tags=["Zones"])
 fastapi.include_router(location_type_router, prefix="/api/v1/location-types", tags=["Location Types"])
 fastapi.include_router(location_router, prefix="/api/v1/locations", tags=["Locations"])
+fastapi.include_router(action_router, prefix="/api/v1", tags=["Actions"])
+fastapi.include_router(action_template_router, prefix="/api/v1/action-templates", tags=["Action Templates"])
+fastapi.include_router(tool_tier_router, prefix="/api/v1/tool-tiers", tags=["Tool Tiers"])
 #app.include_router(building_router,   prefix="/api/v1", tags=["building"])
 #app.include_router(item_router,       prefix="/api/v1", tags=["item"])
+fastapi.include_router(location_sub_types_router, prefix="/api/v1/location-subtypes", tags=["Location Subtypes"])
+fastapi.include_router(resource_node_blueprint_router, prefix="/api/v1/resource-node-blueprints", tags=["Resource Node Blueprints"])
+fastapi.include_router(resource_node_router, prefix="/api/v1", tags=["Resource Nodes"])
+fastapi.include_router(faction_router, prefix="/api/v1", tags=["Factions"])
 
 @fastapi.get("/status")
 def status():

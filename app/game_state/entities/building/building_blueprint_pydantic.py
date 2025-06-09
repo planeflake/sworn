@@ -1,8 +1,6 @@
-import uuid
-from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
-from uuid import UUID, uuid4
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from uuid import UUID
+from pydantic import Field, field_validator, ConfigDict
 
 from app.game_state.entities.core.base_pydantic import BaseEntityPydantic
 
@@ -132,39 +130,7 @@ class BuildingBlueprintPydantic(BaseEntityPydantic):
         if 'attributes' not in v:
             v['attributes'] = []
         return v
-    
-    @classmethod
-    async def from_db(cls, db_obj, convert_stages: bool = True) -> Optional['BuildingBlueprintPydantic']:
-        """Create a new entity from a database model instance."""
-        if db_obj is None:
-            return None
-            
-        blueprint_data = {
-            'entity_id': db_obj.id,
-            'name': db_obj.name,
-            'theme_id': db_obj.theme_id,
-            'description': db_obj.description,
-            'is_unique_per_settlement': getattr(db_obj, 'is_unique_per_settlement', False),
-            'metadata_': getattr(db_obj, '_metadata', {}),
-            'stages': [],  # Initialize empty, add later if needed
-            'created_at': getattr(db_obj, 'created_at', None),
-            'updated_at': getattr(db_obj, 'updated_at', None)
-        }
-        
-        blueprint_entity = cls(**blueprint_data)
 
-        # Handle stages if requested and they exist
-        if convert_stages and hasattr(db_obj, 'stages') and db_obj.stages:
-            stages = []
-            for db_stage in db_obj.stages:
-                stages.append(await BlueprintStagePydantic.from_db(db_stage))
-            blueprint_entity.stages = stages
-            
-            # Sort stages by stage_number
-            blueprint_entity.stages.sort(key=lambda s: s.stage_number)
-
-        return blueprint_entity
-    
     def to_dict(self) -> Dict[str, Any]:
         result = super().to_dict()
         result.update({

@@ -5,6 +5,12 @@ from datetime import datetime
 from uuid import UUID
 import uuid
 
+class Reference(BaseModel):
+    """Generic reference schema for any entity with id and name."""
+    id: UUID
+    name: str
+    code: Optional[str] = None
+
 class WorldBase(BaseModel):
     """Base schema for common world attributes."""
     name: str = Field(..., min_length=1, max_length=100, description="Name of the world.")
@@ -34,6 +40,9 @@ class WorldRead(WorldBase):
     game_day: int = Field(0, description="Current game day in the world.")
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    
+    # Reference objects
+    theme: Optional[Reference] = Field(None, description="Theme reference with id and name")
     
     # Optional additional data (can be extended based on your needs)
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Additional metadata about the world.")

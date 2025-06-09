@@ -1,10 +1,10 @@
 # --- START OF FILE app/api/schemas/theme_schema.py ---
-# (Assuming you've moved your Pydantic schemas to app/api/schemas/)
 
 import uuid
 from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 from datetime import datetime
+from app.game_state.enums.theme import Genre
 
 class ThemeBase(BaseModel):
     """Base schema for common theme attributes."""
@@ -28,8 +28,8 @@ class ThemeRead(ThemeBase):
     This defines the structure of a Theme object when sent via the API.
     """
     id: uuid.UUID # The primary key, will be populated from the DB model
-    # name: str (inherited from ThemeBase)
-    # description: Optional[str] (inherited from ThemeBase)
+    fullname: str
+    genre: Optional[Genre] = None
 
     created_at: datetime
     updated_at: datetime # Assuming updated_at is non-nullable in your DB model
@@ -40,15 +40,12 @@ class ThemeRead(ThemeBase):
             "example": {
                 "id": "dfba10ac-eaa7-4f83-977d-def25746dfb5",
                 "name": "Fantasy Basic",
+                "fullname": "Fantasy Basic (Fantasy)",
                 "description": "A generic fantasy theme with magic and medieval elements.",
                 "created_at": "2023-10-27T10:00:00Z",
                 "updated_at": "2023-10-28T12:30:00Z"
             }
         }
     )
-    # For Pydantic v1:
-    # class Config:
-    #     orm_mode = True
-    #     schema_extra = { ... example dict ... }
 
 # --- END OF FILE app/api/schemas/theme_schema.py ---

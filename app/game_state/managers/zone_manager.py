@@ -5,7 +5,7 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from .base_manager import BaseManager
 from app.game_state.repositories.zone_repository import ZoneRepository
-from app.game_state.entities.zone import Zone
+from app.game_state.entities.geography.zone_pydantic import ZonePydantic
 
 
 class ZoneManager(BaseManager):
@@ -27,23 +27,23 @@ class ZoneManager(BaseManager):
         logging.debug("ZoneManager initialized")
     
     @staticmethod
-    def create(entity_class=Zone, entity_id: Optional[UUID] = None, **kwargs) -> Zone:
+    def create(entity_class=ZonePydantic, entity_id: Optional[UUID] = None, **kwargs) -> ZonePydantic:
         """
-        Create a new Zone entity with the provided attributes.
+        Create a new ZonePydantic entity with the provided attributes.
         
         This utilizes the BaseManager.create method to instantiate the entity.
         
         Args:
-            entity_class: The entity class to create (defaults to Zone)
+            entity_class: The entity class to create (defaults to ZonePydantic)
             entity_id: Optional UUID for the entity
             **kwargs: Additional attributes to set on the entity
                 - name: Required, name of the zone
                 - world_id: Required, the world this zone belongs to
                 - theme_id: Optional, the primary theme of this zone
-                - other fields as defined in the Zone entity
+                - other fields as defined in the ZonePydantic entity
         
         Returns:
-            A new Zone entity instance (not yet persisted to the database)
+            A new ZonePydantic entity instance (not yet persisted to the database)
         """
         # Delegate to BaseManager.create
         return BaseManager.create(
@@ -52,7 +52,7 @@ class ZoneManager(BaseManager):
             **kwargs
         )
     
-    async def find_zones_by_world(self, world_id: UUID) -> List[Zone]:
+    async def find_zones_by_world(self, world_id: UUID) -> List[ZonePydantic]:
         """
         Find all zones within a specific world.
         
@@ -60,18 +60,18 @@ class ZoneManager(BaseManager):
             world_id: The UUID of the world to find zones for
             
         Returns:
-            List of Zone entities in the specified world
+            List of ZonePydantic entities in the specified world
         """
         return await self.repository.find_by_world_id(world_id)
     
-    async def save_zone(self, zone: Zone) -> Zone:
+    async def save_zone(self, zone: ZonePydantic) -> ZonePydantic:
         """
         Persist a zone entity to the database.
         
         Args:
-            zone: The Zone entity to save
+            zone: The ZonePydantic entity to save
             
         Returns:
-            The saved Zone entity with any auto-generated fields populated
+            The saved ZonePydantic entity with any auto-generated fields populated
         """
         return await self.repository.save(zone)

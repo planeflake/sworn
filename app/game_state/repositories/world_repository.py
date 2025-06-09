@@ -2,7 +2,7 @@
 import os
 import redis.asyncio as redis
 from app.db.models.world import World as WorldModel
-from app.game_state.entities.world import WorldEntity
+from app.game_state.entities.world.world_pydantic import WorldEntityPydantic
 from app.game_state.repositories.base_repository import BaseRepository
 import logging
 from typing import Optional, Dict, Any
@@ -26,8 +26,8 @@ redis_pool = redis.ConnectionPool(
     decode_responses=True
 )
 
-class WorldRepository(BaseRepository[WorldEntity, WorldModel, UUID]):
-    def __init__(self, db: AsyncSession, model_cls=WorldModel, entity_cls=WorldEntity):
+class WorldRepository(BaseRepository[WorldEntityPydantic, WorldModel, UUID]):
+    def __init__(self, db: AsyncSession, model_cls=WorldModel, entity_cls=WorldEntityPydantic):
         """
         Initializes the WorldRepository with a database session and model class.
         
@@ -52,7 +52,7 @@ class WorldRepository(BaseRepository[WorldEntity, WorldModel, UUID]):
                 result[key] = value
         return result
         
-    async def find_by_name(self, name: str) -> Optional[WorldEntity]:
+    async def find_by_name(self, name: str) -> Optional[WorldEntityPydantic]:
         """Finds a world by its name."""
         logging.debug(f"[WorldRepository] Finding world by name: {name}")
         stmt = select(self.model_cls).where(self.model_cls.name == name)

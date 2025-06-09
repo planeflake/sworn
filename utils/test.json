@@ -1,0 +1,40 @@
+{
+  "name": "Boreas",
+  "description": "string",
+  "location_type_id": "1e93492f-4630-49aa-99f2-b714a590c600",
+  "location_type_code": "Settlement",
+  "parent_type_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "parent_type_code": "string",
+  "coordinates": {
+    "additionalProp1": 0,
+    "additionalProp2": 0,
+    "additionalProp3": 0
+  },
+  "attributes": {},
+  "tags": [
+    "string"
+  ],
+  "is_active": true
+},
+{
+  "id": "b3b6fef9-bcf3-4b33-a171-e66f2161a3d7",
+  "name": "Boreas",
+  "description": "string",
+  "location_type_id": "1e93492f-4630-49aa-99f2-b714a590c600",
+  "location_sub_type": null,
+  "theme_id": "b2494b91-f7d1-4c8d-9da2-c628816ed9de",
+  "parent_id": null,
+  "biome_id": "da05412a-2194-4a88-afd1-8e8e0c5b6e99",
+  "attributes": {},
+  "tags": [
+    "string"
+  ],
+  "coordinates": {},
+  "is_active": true,
+  "created_at": "2025-06-03T22:23:32.849286Z",
+  "updated_at": null,
+  "buildings": [],
+  "resources": [],
+  "resource_nodes": [],
+  "travel_connections": []
+}

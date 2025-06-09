@@ -15,3 +15,13 @@ class ResourceOwnerType(str, Enum):
     CONTAINER = "container"         # Chests, barrels, crates
     QUEST = "quest"                 # Rewards, quest-banked resources
     VEHICLE = "vehicle"             # Carts, ships, siege engines
+
+class ResourceNodeVisibilityEnum(str, Enum):
+    INVISIBLE = "invisible"     # INVISIBLE
+    HIDDEN = "hidden"           # Completely unknown
+    RUMOURED = "rumoured"       # Vague knowledge exists
+    DISCOVERABLE = "discoverable"  # Can be found through exploration
+    DISCOVERED = "discovered"   # Location is known
+    VISIBLE = "visible"         # Can be seen/inspected
+    HARVESTABLE = "harvestable" # Ready for resource extraction
+

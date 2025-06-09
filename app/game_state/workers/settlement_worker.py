@@ -59,7 +59,7 @@ async def _expand_settlement_async(world_id: Optional[uuid], task_id: str) -> Di
     async with get_db_session() as session:
         # Create service instances
         settlement_service = SettlementService(db=session)
-        from app.game_state.services.building_evaluation_service import BuildingEvaluationService
+        from app.game_state.services.building.building_evaluation_service import BuildingEvaluationService
         building_evaluation_service = BuildingEvaluationService(db=session)
         #from app.game_state.services.building_instance_service import BuildingInstanceService
         #building_service = BuildingInstanceService(db=session)

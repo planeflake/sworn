@@ -5,7 +5,8 @@ import uuid
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timezone
 
-from app.game_state.entities.building_instance import BuildingInstanceEntity, BuildingStatus
+from app.game_state.entities.building.building_instance_pydantic import BuildingInstanceEntityPydantic
+from app.game_state.enums.building import BuildingStatus
 from app.game_state.managers.base_manager import BaseManager # Assuming you have a BaseManager
 
 class BuildingInstanceManager(BaseManager):
@@ -27,7 +28,7 @@ class BuildingInstanceManager(BaseManager):
         stored_resources: Optional[Dict[Any, int]] = None, # Allow Any for key initially
         assigned_workers_details: Optional[Dict[Any, int]] = None, # Allow Any for key initially
         instance_description: Optional[str] = None,
-    ) -> BuildingInstanceEntity:
+    ) -> BuildingInstanceEntityPydantic:
         if entity_id is None:
             entity_id = uuid.uuid4()
 
@@ -56,5 +57,5 @@ class BuildingInstanceManager(BaseManager):
             "created_at": datetime.now(timezone.utc),
             "updated_at": datetime.now(timezone.utc),
         }
-        return BuildingInstanceEntity(**entity_kwargs)
+        return BuildingInstanceEntityPydantic(**entity_kwargs)
 # --- END OF FILE app/game_state/managers/building_instance_manager.py ---

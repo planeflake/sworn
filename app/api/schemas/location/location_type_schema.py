@@ -3,6 +3,7 @@ API schemas for location types.
 """
 from typing import Optional, List, Dict, Any
 from uuid import UUID
+from datetime import datetime
 from pydantic import BaseModel, Field, ConfigDict
 
 class AttributeDefinition(BaseModel):
@@ -17,13 +18,13 @@ class AttributeDefinition(BaseModel):
 
 class LocationTypeBase(BaseModel):
     """Base schema for location type data."""
-    code: str
+    code: Optional[str] = None
     name: str
     description: Optional[str] = None
     theme: Optional[str] = None
     can_contain: List[str] = Field(default_factory=list)
-    required_attributes: List[AttributeDefinition] = Field(default_factory=list)
-    optional_attributes: List[AttributeDefinition] = Field(default_factory=list)
+    required_attributes: List[Dict[str, Any]] = Field(default_factory=list)
+    optional_attributes: List[Dict[str, Any]] = Field(default_factory=list)
     icon_path: Optional[str] = None
     tags: List[str] = Field(default_factory=list)
 
@@ -46,7 +47,7 @@ class LocationTypeUpdate(BaseModel):
 class LocationTypeResponse(LocationTypeBase):
     """Schema for location type response."""
     id: UUID
-    created_at: str
-    updated_at: Optional[str] = None
+    created_at: datetime
+    updated_at: Optional[datetime] = None
     
     model_config = ConfigDict(from_attributes=True)

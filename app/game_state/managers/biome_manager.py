@@ -2,7 +2,7 @@
 from typing import Optional, Dict, Any, List
 import uuid
 
-from app.game_state.entities.biome import BiomeEntity
+from app.game_state.entities.geography.biome_pydantic import BiomeEntityPydantic
 from app.game_state.managers.base_manager import BaseManager
 
 class BiomeManager(BaseManager):
@@ -23,7 +23,7 @@ class BiomeManager(BaseManager):
         resource_types: Optional[Dict[str, float]] = None,
         color_hex: Optional[str] = None,
         icon_path: Optional[str] = None
-    ) -> BiomeEntity:
+    ) -> BiomeEntityPydantic:
         """
         Creates a new BiomeEntity instance without persisting it.
         
@@ -40,7 +40,7 @@ class BiomeManager(BaseManager):
             icon_path: Path to biome icon image
             
         Returns:
-            A new BiomeEntity instance
+            A new BiomeEntityPydantic instance
         """
         # Use display_name same as name if not provided
         if display_name is None:
@@ -55,7 +55,7 @@ class BiomeManager(BaseManager):
             entity_id = uuid.uuid4()
             
         # Create entity
-        return BiomeEntity(
+        return BiomeEntityPydantic(
             entity_id=entity_id,
             biome_id=biome_id,
             name=name,
@@ -70,7 +70,7 @@ class BiomeManager(BaseManager):
     
     @staticmethod
     def calculate_resource_abundance(
-        biome: BiomeEntity,
+        biome: BiomeEntityPydantic,
         resource_type: str,
         base_quantity: float = 1.0,
         world_modifiers: Optional[Dict[str, float]] = None
@@ -102,7 +102,7 @@ class BiomeManager(BaseManager):
     
     @staticmethod
     def calculate_travel_time(
-        biome: BiomeEntity,
+        biome: BiomeEntityPydantic,
         distance: float,
         base_speed: float = 1.0,
         traveler_modifiers: Optional[Dict[str, float]] = None
@@ -139,7 +139,7 @@ class BiomeManager(BaseManager):
     
     @staticmethod
     def get_danger_level(
-        biome: BiomeEntity,
+        biome: BiomeEntityPydantic,
         time_of_day: Optional[str] = None,
         season: Optional[str] = None
     ) -> int:

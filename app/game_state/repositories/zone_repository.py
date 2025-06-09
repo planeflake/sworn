@@ -5,10 +5,10 @@ from typing import List
 import logging
 
 from app.game_state.repositories.base_repository import BaseRepository
-from app.game_state.entities.zone import Zone as ZoneEntity
+from app.game_state.entities.geography.zone_pydantic import ZonePydantic
 from app.db.models.zone import Zone as ZoneModel  # This is the SQLAlchemy model for the DB
 
-class ZoneRepository(BaseRepository[ZoneEntity, ZoneModel, UUID]):
+class ZoneRepository(BaseRepository[ZonePydantic, ZoneModel, UUID]):
     """
     Repository for working with Zone entities.
     Maps between domain entity (ZoneEntity) and database model (ZoneModel).
@@ -16,10 +16,10 @@ class ZoneRepository(BaseRepository[ZoneEntity, ZoneModel, UUID]):
     def __init__(self, db: AsyncSession):
         """Initialize the ZoneRepository with a database session."""
         self.db = db
-        super().__init__(db=db, model_cls=ZoneModel, entity_cls=ZoneEntity)
-        logging.info(f"ZoneRepository initialized with model {ZoneModel.__name__} and entity {ZoneEntity.__name__}")
+        super().__init__(db=db, model_cls=ZoneModel, entity_cls=ZonePydantic)
+        logging.info(f"ZoneRepository initialized with model {ZoneModel.__name__} and entity {ZonePydantic.__name__}")
     
-    async def find_by_world_id(self, world_id: UUID) -> List[ZoneEntity]:
+    async def find_by_world_id(self, world_id: UUID) -> List[ZonePydantic]:
         """Find all zones in a specific world."""
         logging.debug(f"[ZoneRepository] Finding zones for world: {world_id}")
         try:
@@ -37,7 +37,7 @@ class ZoneRepository(BaseRepository[ZoneEntity, ZoneModel, UUID]):
             logging.error(f"[ZoneRepository] Error finding zones for world {world_id}: {e}", exc_info=True)
             return []
     
-    async def find_by_biome_id(self, biome_id: UUID) -> List[ZoneEntity]:
+    async def find_by_biome_id(self, biome_id: UUID) -> List[ZonePydantic]:
         """Find all zones associated with a specific biome."""
         logging.debug(f"[ZoneRepository] Finding zones for biome: {biome_id}")
         try:

@@ -2,7 +2,7 @@
 
 from .base_repository import BaseRepository
 # Use aliases for clarity
-from app.game_state.entities.settlement import SettlementEntity
+from app.game_state.entities.geography.settlement_pydantic import SettlementEntityPydantic
 from app.db.models.settlement import Settlement as SettlementModel
 from app.db.async_session import AsyncSession
 from typing import List, Optional, Dict, Any
@@ -11,16 +11,16 @@ from sqlalchemy.orm import selectinload
 from uuid import UUID
 import logging
 
-class SettlementRepository(BaseRepository[SettlementEntity, SettlementModel, UUID]):
+class SettlementRepository(BaseRepository[SettlementEntityPydantic, SettlementModel, UUID]):
     """
     Repository specifically for Settlement entities.
     """
     def __init__(self, db: AsyncSession):
         # Pass both the DB model class AND the domain entity class to the base repository
-        super().__init__(db=db, model_cls=SettlementModel, entity_cls=SettlementEntity)
-        logging.info(f"SettlementRepository initialized with model {SettlementModel.__name__} and entity {SettlementEntity.__name__}")
+        super().__init__(db=db, model_cls=SettlementModel, entity_cls=SettlementEntityPydantic)
+        logging.info(f"SettlementRepository initialized with model {SettlementModel.__name__} and entity {SettlementEntityPydantic.__name__}")
         
-    async def find_by_id(self, entity_id: UUID) -> Optional[SettlementEntity]:
+    async def find_by_id(self, entity_id: UUID) -> Optional[SettlementEntityPydantic]:
         """
         Override find_by_id to use eager loading for building_instances relationship
         to avoid the "greenlet_spawn has not been called" error.
@@ -42,7 +42,7 @@ class SettlementRepository(BaseRepository[SettlementEntity, SettlementModel, UUI
             logging.debug(f"[FindByID] Object not found for ID: {entity_id}")
             return None
             
-    async def _entity_to_model_dict(self, entity: SettlementEntity, is_new: bool = False) -> dict:
+    async def _entity_to_model_dict(self, entity: SettlementEntityPydantic, is_new: bool = False) -> dict:
         """Special handling for settlement entity conversion to model dict"""
         # Debug resources before conversion
         logging.debug(f"[SettlementRepository] Resources in entity before conversion: {entity.resources}")
@@ -69,7 +69,7 @@ class SettlementRepository(BaseRepository[SettlementEntity, SettlementModel, UUI
             
         return model_dict
 
-    async def find_by_world(self, world_id: UUID) -> List[SettlementEntity]:
+    async def find_by_world(self, world_id: UUID) -> List[SettlementEntityPydantic]:
         """Find all settlements in a specific world."""
         logging.debug(f"[SettlementRepository] Finding settlements for world: {world_id}")
         # Use eager loading for building_instances to avoid lazy loading issues
@@ -82,7 +82,7 @@ class SettlementRepository(BaseRepository[SettlementEntity, SettlementModel, UUI
         logging.debug(f"[SettlementRepository] Found {len(settlements)} settlements for world: {world_id}")
         return settlements
 
-    async def rename(self, settlement_id: UUID, new_name: str) -> Optional[SettlementEntity]:
+    async def rename(self, settlement_id: UUID, new_name: str) -> Optional[SettlementEntityPydantic]:
         """Rename a settlement."""
         logging.debug(f"[SettlementRepository] Renaming settlement {settlement_id} to '{new_name}'")
         stmt = (
@@ -103,7 +103,7 @@ class SettlementRepository(BaseRepository[SettlementEntity, SettlementModel, UUI
             logging.warning(f"[SettlementRepository] Settlement {settlement_id} not found for rename")
             return None
 
-    async def set_leader(self, settlement_id: UUID, leader_id: UUID) -> Optional[SettlementEntity]:
+    async def set_leader(self, settlement_id: UUID, leader_id: UUID) -> Optional[SettlementEntityPydantic]:
         """Set the leader of a settlement."""
         logging.debug(f"[SettlementRepository] Setting leader {leader_id} for settlement {settlement_id}")
         stmt = (
@@ -124,19 +124,19 @@ class SettlementRepository(BaseRepository[SettlementEntity, SettlementModel, UUI
             logging.warning(f"[SettlementRepository] Settlement {settlement_id} not found for setting leader")
             return None
 
-    async def construct_building(self, settlement_id: UUID, building_id: str) -> Optional[SettlementEntity]:
+    async def construct_building(self, settlement_id: UUID, building_id: str) -> Optional[SettlementEntityPydantic]:
         """Add a building to a settlement."""
         # Implementation depends on how buildings are stored (JSONB array, relation table, etc.)
         # This is a placeholder implementation
         pass
 
-    async def demolish_building(self, settlement_id: UUID, building_id: str) -> Optional[SettlementEntity]:
+    async def demolish_building(self, settlement_id: UUID, building_id: str) -> Optional[SettlementEntityPydantic]:
         """Remove a building from a settlement."""
         # Implementation depends on how buildings are stored (JSONB array, relation table, etc.)
         # This is a placeholder implementation
         pass
 
-    async def add_resource(self, settlement_id: UUID, resource_id: UUID, quantity: int = 1) -> Optional[SettlementEntity]:
+    async def add_resource(self, settlement_id: UUID, resource_id: UUID, quantity: int = 1) -> Optional[SettlementEntityPydantic]:
         """
         Add a specific quantity of a resource to a settlement.
         
@@ -181,7 +181,7 @@ class SettlementRepository(BaseRepository[SettlementEntity, SettlementModel, UUI
             logging.warning(f"[SettlementRepository] Settlement {settlement_id} not found for adding resource")
             return None
             
-    async def remove_resource(self, settlement_id: UUID, resource_id: UUID, quantity: int = 1) -> Optional[SettlementEntity]:
+    async def remove_resource(self, settlement_id: UUID, resource_id: UUID, quantity: int = 1) -> Optional[SettlementEntityPydantic]:
         """
         Remove a specific quantity of a resource from a settlement.
         
@@ -298,7 +298,7 @@ class SettlementRepository(BaseRepository[SettlementEntity, SettlementModel, UUI
                 
         return True
         
-    async def apply_resource_costs(self, settlement_id: UUID, costs: Dict[UUID, int]) -> Optional[SettlementEntity]:
+    async def apply_resource_costs(self, settlement_id: UUID, costs: Dict[UUID, int]) -> Optional[SettlementEntityPydantic]:
         """
         Apply a set of resource costs to a settlement. This is an atomic operation -
         either all costs are applied or none are.

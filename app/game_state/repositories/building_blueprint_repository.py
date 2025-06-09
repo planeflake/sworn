@@ -12,76 +12,20 @@ from app.db.models.building_blueprint import BuildingBlueprint as BuildingBluepr
 from app.db.models.blueprint_stage import BlueprintStage as BlueprintStageDB
 from app.db.models.blueprint_stage_feature import BlueprintStageFeature as BlueprintStageFeatureDB # Assuming this path
 
-from app.game_state.entities.building_blueprint import (
-    BuildingBlueprintEntity,
-    BlueprintStageEntity,
-    BlueprintStageFeatureEntity
+from app.game_state.entities.building.building_blueprint_pydantic import (
+    BuildingBlueprintPydantic
 )
 from app.game_state.repositories.base_repository import BaseRepository
 
-class BuildingBlueprintRepository(BaseRepository[BuildingBlueprintEntity, BuildingBlueprintDB, uuid.UUID]):
+class BuildingBlueprintRepository(BaseRepository[BuildingBlueprintPydantic, BuildingBlueprintDB, uuid.UUID]):
     def __init__(self, db: AsyncSession):
-        super().__init__(db=db, model_cls=BuildingBlueprintDB, entity_cls=BuildingBlueprintEntity)
+        super().__init__(db=db, model_cls=BuildingBlueprintDB, entity_cls=BuildingBlueprintPydantic)
         logging.info(
             f"BuildingBlueprintRepository initialized with model: {self.model_cls.__name__} "
             f"and entity: {self.entity_cls.__name__}"
         )
 
-    @staticmethod
-    async def _convert_db_stages_to_entity_stages(db_stages: List[BlueprintStageDB]) -> List[BlueprintStageEntity]:
-        entity_stages = []
-
-        for db_stage in db_stages:
-            entity_features = []
-            if db_stage.optional_features:
-                for db_feature in db_stage.optional_features:
-                    # Manually create feature entities without using dataclass fields
-                    feature_data = {
-                        'entity_id': db_feature.id,
-                        'name': db_feature.name,
-                        'blueprint_stage_id': db_feature.blueprint_stage_id,
-                        'feature_key': db_feature.feature_key,
-                        'description': db_feature.description,
-                        'required_professions': getattr(db_feature, 'required_professions', []),
-                        'additional_resource_costs': getattr(db_feature, 'additional_resource_costs', []),
-                        'additional_duration_days': getattr(db_feature, 'additional_duration_days', None),
-                        'effects': getattr(db_feature, 'effects', {}),
-                        'created_at': getattr(db_feature, 'created_at', None),
-                        'updated_at': getattr(db_feature, 'updated_at', None),
-                    }
-                    entity_features.append(BlueprintStageFeatureEntity(**feature_data))
-
-            # Manually create stage entity without using dataclass fields
-            # Ensure timestamps are datetime objects, not strings
-            created_at = getattr(db_stage, 'created_at', None)
-            updated_at = getattr(db_stage, 'updated_at', None)
-            
-            stage_data = {
-                'entity_id': db_stage.id,
-                'name': db_stage.name,
-                'building_blueprint_id': db_stage.building_blueprint_id,
-                'stage_number': db_stage.stage_number,
-                'description': db_stage.description,
-                'duration_days': getattr(db_stage, 'duration_days', 0.0),
-                'resource_costs': getattr(db_stage, 'resource_costs', []),
-                'profession_time_bonus': getattr(db_stage, 'profession_time_bonus', []),
-                'stage_completion_bonuses': getattr(db_stage, 'stage_completion_bonuses', []),
-                'created_at': created_at,
-                'updated_at': updated_at,
-            }
-            # Add features separately since they're objects, not primitive values
-            stage_entity = BlueprintStageEntity(**stage_data)
-            stage_entity.optional_features = entity_features
-            entity_stages.append(stage_entity)
-
-        entity_stages.sort(key=lambda s: s.stage_number)
-        return entity_stages
-
-    async def _convert_to_entity(self, db_obj: BuildingBlueprintDB) -> Optional[BuildingBlueprintEntity]:
-        """Convert a database model instance to a domain entity."""
-        return await BuildingBlueprintEntity.from_db(db_obj)
-
-    async def _entity_to_model_dict(self, entity: BuildingBlueprintEntity, is_new: bool = False) -> Dict[str, Any]:
+    async def _entity_to_model_dict(self, entity: BuildingBlueprintPydantic, is_new: bool = False) -> Dict[str, Any]:
         """
         Converts domain entity (BuildingBlueprintEntity with nested stages/features)
         to a dictionary suitable for SQLAlchemy model instantiation or update.
@@ -122,7 +66,7 @@ class BuildingBlueprintRepository(BaseRepository[BuildingBlueprintEntity, Buildi
 
         return model_data
 
-    async def find_by_id_with_details(self, blueprint_id: uuid.UUID) -> Optional[BuildingBlueprintEntity]:
+    async def find_by_id_with_details(self, blueprint_id: uuid.UUID) -> Optional[BuildingBlueprintPydantic]:
         """Finds a blueprint by ID and eagerly loads its stages and their features."""
         stmt = (
             select(self.model_cls)
@@ -136,7 +80,7 @@ class BuildingBlueprintRepository(BaseRepository[BuildingBlueprintEntity, Buildi
         db_obj = result.scalar_one_or_none()
         return await self._convert_to_entity(db_obj) if db_obj else None
 
-    async def find_all_with_details(self, skip: int = 0, limit: int = 100, theme_id: Optional[uuid.UUID] = None) -> List[BuildingBlueprintEntity]:
+    async def find_all_with_details(self, skip: int = 0, limit: int = 100, theme_id: Optional[uuid.UUID] = None) -> List[BuildingBlueprintPydantic]:
         """Finds all blueprints, optionally filtered by theme, with details."""
         stmt = (
             select(self.model_cls)
@@ -156,7 +100,7 @@ class BuildingBlueprintRepository(BaseRepository[BuildingBlueprintEntity, Buildi
         entities = [await self._convert_to_entity(db_obj) for db_obj in db_objs]
         return [entity for entity in entities if entity is not None]
 
-    async def find_by_name(self, name: str, theme_id: Optional[uuid.UUID] = None) -> Optional[BuildingBlueprintEntity]:
+    async def find_by_name(self, name: str, theme_id: Optional[uuid.UUID] = None) -> Optional[BuildingBlueprintPydantic]:
         """Finds a blueprint by its unique name, optionally within a theme."""
         stmt = select(self.model_cls).where(self.model_cls.name == name)
         if theme_id:
@@ -169,7 +113,7 @@ class BuildingBlueprintRepository(BaseRepository[BuildingBlueprintEntity, Buildi
         db_obj = result.scalar_one_or_none()
         return await self._convert_to_entity(db_obj)
 
-    async def save_blueprint_with_stages(self, blueprint_entity: BuildingBlueprintEntity) -> BuildingBlueprintEntity:
+    async def save_blueprint_with_stages(self, blueprint_entity: BuildingBlueprintPydantic) -> BuildingBlueprintPydantic:
         db_blueprint_to_save: Optional[BuildingBlueprintDB] = None
 
         if blueprint_entity.entity_id:  # UPDATE PATH

@@ -1,11 +1,12 @@
 
 import enum
 
-class Theme(enum.Enum):
+class Genre(enum.Enum):
     """Enum for item rarity levels."""
     FANTASY = "Fantasy"
     SCI_FI = "Sci-Fi"
     MODERN = "Modern"
+    HORROR = "Horror"
     HISTORICAL = "Historical"
     MYSTICAL = "Mystical"
     STEAMPUNK = "Steampunk"

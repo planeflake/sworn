@@ -35,7 +35,7 @@ class ResourceRead(ResourceBase):
     Pydantic Schema for reading/returning a Resource.
     This defines the structure of a Resource object when sent via the API.
     """
-    resource_id: uuid.UUID
+    id: uuid.UUID
     theme_id: Optional[uuid.UUID] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
@@ -47,7 +47,7 @@ class ResourceRead(ResourceBase):
         "from_attributes": True,
         "json_schema_extra": {
             "example": {
-                "resource_id": "dfba10ac-eaa7-4f83-977d-def25746dfb5",
+                "id": "dfba10ac-eaa7-4f83-977d-def25746dfb5",
                 "name": "Iron Ore",
                 "description": "Raw iron ore extracted from mines.",
                 "stack_size": 50,

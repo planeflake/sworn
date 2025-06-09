@@ -15,8 +15,6 @@ class SettlementEntityPydantic(BaseEntityPydantic):
     description: Optional[str] = None
     # Buildings are stored as a list of strings (IDs) - this matches the repository structure
     buildings: List[str] = Field(default_factory=list)
-    # We don't directly use the building_instances relationship from the SQLAlchemy model
-    # to avoid lazy loading issues in async contexts
     building_instances: List[Any] = Field(default_factory=list) 
     # Resources mapped as Dict[resource_uuid_str, quantity]
     resources: Dict[str, int] = Field(default_factory=dict)

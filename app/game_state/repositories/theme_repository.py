@@ -6,17 +6,17 @@ from typing import Optional
 import logging
 
 from app.db.models.theme import ThemeDB as ThemeModel # DB Model
-from app.game_state.entities.theme import ThemeEntity # Domain Entity
+from app.game_state.entities.core.theme_pydantic import ThemeEntityPydantic # Domain Entity
 from app.game_state.repositories.base_repository import BaseRepository
 
-class ThemeRepository(BaseRepository[ThemeEntity, ThemeModel, UUID]):
+class ThemeRepository(BaseRepository[ThemeEntityPydantic, ThemeModel, UUID]):
     def __init__(self, db: AsyncSession):
         """Initializes the ThemeRepository."""
         # Pass the DB session, SQLAlchemy model, and Domain entity
-        super().__init__(db=db, model_cls=ThemeModel, entity_cls=ThemeEntity)
-        logging.info(f"ThemeRepository initialized with model {ThemeModel.__name__} and entity {ThemeEntity.__name__}")
+        super().__init__(db=db, model_cls=ThemeModel, entity_cls=ThemeEntityPydantic)
+        logging.info(f"ThemeRepository initialized with model {ThemeModel.__name__} and entity {ThemeEntityPydantic.__name__}")
 
-    async def find_by_name(self, name: str) -> Optional[ThemeEntity]:
+    async def find_by_name(self, name: str) -> Optional[ThemeEntityPydantic]:
         """Finds a theme by its unique name."""
         logging.debug(f"[ThemeRepository] Finding theme by name: {name}")
         stmt = select(self.model_cls).where(self.model_cls.name == name)

@@ -11,7 +11,6 @@ from sqlalchemy import (
     Date,
     Enum,
     ForeignKey,
-    UniqueConstraint,
     func
 )
 from sqlalchemy.orm import (
@@ -23,6 +22,7 @@ from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.dialects.postgresql import JSONB, ARRAY
 from sqlalchemy.sql import text
 
+from app.db.models.locations.location_faction_presence import LocationFactionPresence
 from .base import Base
 
 class Faction(Base):
@@ -53,6 +53,12 @@ class Faction(Base):
         pg.UUID(as_uuid=True),
         ForeignKey("themes.id", name="faction_theme_id"),
         nullable=True
+    )
+
+    location_presences: Mapped[list[LocationFactionPresence]] = relationship(
+        "LocationFactionPresence",
+        back_populates="faction",
+        lazy="selectin",
     )
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)

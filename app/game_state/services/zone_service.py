@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.game_state.managers.zone_manager import ZoneManager
 from app.game_state.repositories.zone_repository import ZoneRepository
 from app.api.schemas.zone_api_schema import ZoneBase, ZoneCreatedResponse
-from app.game_state.entities.zone import Zone
+from app.game_state.entities.geography.zone_pydantic import ZonePydantic as Zone
 
 class ZoneService:
     @staticmethod

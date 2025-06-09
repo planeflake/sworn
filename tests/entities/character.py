@@ -9,12 +9,6 @@ from app.game_state.entities.character.character_pydantic import CharacterEntity
 # Import enums
 from app.game_state.enums.character import CharacterTypeEnum, CharacterStatusEnum, CharacterTraitEnum
 
-# Import related entities (mock these if needed)
-from app.game_state.entities.equipment import EquipmentEntity
-from app.game_state.entities.skill import SkillEntity
-from app.game_state.entities.stat import StatEntity
-from app.game_state.entities.item import Item
-
 
 class TestCharacterEntityPydantic:
     """Test suite for CharacterEntityPydantic entity"""

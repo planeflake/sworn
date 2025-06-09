@@ -82,6 +82,7 @@ async def import_biomes() -> None:
                 
                 # Save the biome to the database
                 saved_biome = await repository.save(biome_entity)
+                await session.commit()
                 logger.info(f"Imported biome: {saved_biome.name} (ID: {saved_biome.entity_id})")
                 
             except Exception as e:

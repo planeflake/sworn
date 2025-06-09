@@ -4,7 +4,7 @@
 World Manager - Contains domain logic for world operations
 """
 
-from app.game_state.entities.world import World
+from app.game_state.entities.world.world_pydantic import WorldEntityPydantic
 from typing import Optional
 from uuid import UUID, uuid4
 import logging 
@@ -13,7 +13,7 @@ class WorldManager:
     """Manager class for world-specific domain logic"""
 
     @staticmethod
-    async def create_world(name: Optional[str] = None) -> World:
+    async def create_world(name: Optional[str] = None) -> WorldEntityPydantic:
         """
         Create a new world entity object in memory with provided or default values.
         Does NOT save to the database.
@@ -24,12 +24,12 @@ class WorldManager:
             **( {"name": name} if name is not None else {} )
         }
 
-        world_entity = World(**world_data)
-        logging.info(f"Created transient WorldEntity in memory: name='{world_entity.name}'")
+        world_entity = WorldEntityPydantic(**world_data)
+        logging.info(f"Created transient WorldEntityPydantic in memory: name='{world_entity.name}'")
         return world_entity
 
     @staticmethod
-    async def increment_day(world: World) -> World:
+    async def increment_day(world: WorldEntityPydantic) -> WorldEntityPydantic:
         """
         Increment the day counter of the world entity.
         Potentially triggers other day-based logic (e.g., season change).
@@ -41,12 +41,12 @@ class WorldManager:
         Returns:
             The modified WorldEntity instance.
         """
-        if not isinstance(world, World):
+        if not isinstance(world, WorldEntityPydantic):
                 # Add type check for safety if needed
-                raise TypeError("increment_day expects a WorldEntity object")
+                raise TypeError("increment_day expects a WorldEntityPydantic object")
 
-        world.game_day += 1
-        logging.debug(f"Incremented game_day for world {world.id} to {world.game_day}")
+        world.day += 1
+        logging.debug(f"Incremented day for world {world.entity_id} to {world.day}")
 
         # --- Future Domain Logic ---
         # world = await WorldManager.update_season(world)

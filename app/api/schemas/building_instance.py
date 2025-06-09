@@ -2,10 +2,11 @@
 
 import uuid
 from pydantic import BaseModel, Field # For Pydantic v2, if using v1 import ConfigDict
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict
 from datetime import datetime
 
-from app.game_state.entities.building_instance import BuildingStatus # Import the enum
+#from app.game_state.entities.building import BuildingEntityPydantic # Import the enum
+from app.game_state.enums.building import BuildingStatus
 
 # Generate some example UUIDs for use in the schema example
 EXAMPLE_BLUEPRINT_ID = uuid.uuid4()

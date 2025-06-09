@@ -4,7 +4,7 @@ from app.db.dependencies import get_async_db
 import logging
 from pydantic import BaseModel, Field, ConfigDict # Added Field
 import random
-from app.game_state.services.world_service import WorldService
+from app.game_state.services.core.world_service import WorldService
 from app.game_state.services.settlement_service import SettlementService
 from uuid import UUID
 from typing import Optional, Dict # Added Dict for resource quantities

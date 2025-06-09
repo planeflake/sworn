@@ -1,7 +1,8 @@
 # --- START - app/api/routes/resource_routes.py ---
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Path
-from app.game_state.services.resource_service import ResourceService
+from app.game_state.services.resource.resource_service import ResourceService
+from app.game_state.services.core.theme_service import ThemeService
 from app.game_state.enums.shared import RarityEnum, StatusEnum
 from app.api.schemas.resource import ResourceRead, ResourceCreate
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -91,7 +92,7 @@ async def get_resource_by_id(
     Retrieve details for a specific resource type using its UUID.
     """
     resource_service = ResourceService(db=db)
-    resource = await resource_service.get_resource_by_id(resource_id=resource_id)
+    resource = await resource_service.find_by_id(resource_id)
     if resource is None:
         raise HTTPException(status_code=404, detail=f"Resource type with ID {resource_id} not found.")
     return resource
@@ -104,7 +105,8 @@ async def get_resource_by_id(
 async def list_resources(
     rarity: Optional[RarityEnum] = Query(None, description="Filter resources by rarity level"), # Filter by rarity
     skip: int = Query(0, ge=0, description="Number of records to skip (for pagination)"),
-    limit: int = Query(100, ge=1, le=200, description="Maximum number of records to return"), # Limit results
+    limit: int = Query(100, ge=1, le=200, description="Maximum number of records to return"),
+    theme_id: Optional[UUID] = Query(None, description="Filter the search to a specific theme_id"),
     db: AsyncSession = Depends(get_async_db)
 ):
     """
@@ -113,13 +115,24 @@ async def list_resources(
     """
     resource_service = ResourceService(db=db)
 
+    if theme_id:
+        theme_service = ThemeService(db=db)
+        exists = await theme_service.exists(theme_id)
+        if not exists:
+            raise HTTPException(status_code=404, detail=f"Theme with ID {theme_id} not found.")
+
+        else:
+            logging.info(f"Filtering resources by theme_id: {theme_id}")
+            #resource_service.
+
     if rarity:
         raise HTTPException(status_code=501, detail="Filtering by rarity not yet implemented.")
     else:
-        resources = await resource_service.get_all_resources(skip=skip, limit=limit)
+        resources = await resource_service.find_all()
+
+        resources = [ResourceRead.model_validate(resource) for resource in resources]
 
         total = len(resources)
-    # -------------------------------------------------------------
 
     return ResourceListResponse(resources=resources, total=total)
 

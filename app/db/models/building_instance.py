@@ -16,7 +16,7 @@ from sqlalchemy.dialects.postgresql import UUID as pgUUID, JSONB, ARRAY
 
 from .base import Base
 from app.game_state.enums.building import BuildingStatus # Import from proper enum location
-from app.game_state.entities.character import CharacterEntity # Assuming this is the correct path
+# NOTE: CharacterEntity import removed - entity imports should not be in DB models
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

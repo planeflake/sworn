@@ -5,7 +5,7 @@ from uuid import UUID
 from typing import Optional
 
 # Import Domain Entity and Enums
-from app.game_state.entities.resource import ResourceEntity
+from app.game_state.entities.resource.resource_pydantic import ResourceEntityPydantic
 from app.game_state.enums.shared import RarityEnum, StatusEnum
 # No Repository or DB Session imports needed here
 
@@ -24,7 +24,7 @@ class ResourceManager:
         rarity: RarityEnum = RarityEnum.COMMON,
         status: StatusEnum = StatusEnum.ACTIVE,
         theme_id: Optional[UUID] = None,
-    ) -> ResourceEntity:
+    ) -> ResourceEntityPydantic:
         """
         Creates a new transient (in-memory) ResourceEntity.
         Applies initial validation or default logic if any.
@@ -39,12 +39,12 @@ class ResourceManager:
             theme_id: Optional theme ID.
 
         Returns:
-            A new ResourceEntity instance.
+            A new ResourceEntityPydantic instance.
 
         Raises:
             ValueError: If validation fails (e.g., invalid name).
         """
-        logging.debug(f"Creating transient ResourceEntity: id={resource_id}, name='{name}'")
+        logging.debug(f"Creating transient ResourceEntityPydantic: id={resource_id}, name='{name}'")
 
         # --- Domain Validation Example ---
         if not name or len(name) < 2:
@@ -55,7 +55,7 @@ class ResourceManager:
 
         # Create the entity using keyword arguments for clarity
         # after the required positional resource_id
-        resource_entity = ResourceEntity(
+        resource_entity = ResourceEntityPydantic(
             resource_id=resource_id,
             name=name,
             description=description,
@@ -65,11 +65,11 @@ class ResourceManager:
             theme_id=theme_id,
             # created_at/updated_at are typically handled by persistence layer
         )
-        logging.debug(f"Transient ResourceEntity created: {resource_entity}")
+        logging.debug(f"Transient ResourceEntityPydantic created: {resource_entity}")
         return resource_entity
 
     @staticmethod
-    def can_resource_be_used(resource: ResourceEntity) -> bool:
+    def can_resource_be_used(resource: ResourceEntityPydantic) -> bool:
         """
         Example domain logic check: Can this resource type currently be used?
         """

@@ -2,7 +2,7 @@
 Theme Manager - Contains domain logic for theme operations
 """
 from uuid import UUID
-from app.game_state.entities.theme import ThemeEntity
+from app.game_state.entities.core.theme_pydantic import ThemeEntityPydantic
 from app.game_state.repositories.theme_repository import ThemeRepository
 from app.game_state.managers.base_manager import BaseManager
 from sqlalchemy.ext.asyncio import AsyncSession 
@@ -12,7 +12,7 @@ class ThemeManager:
     """Manager class for theme-specific domain logic"""
     
     @staticmethod
-    async def create_theme(theme_id: Optional[UUID] = None, name: Optional[str] = None, description: Optional[str] = None, db: AsyncSession = None) -> ThemeEntity:
+    async def create_theme(theme_id: Optional[UUID] = None, name: Optional[str] = None, description: Optional[str] = None, db: AsyncSession = None) -> ThemeEntityPydantic:
         """
         Create a new theme entity with the specified values.
         
@@ -23,11 +23,11 @@ class ThemeManager:
             db: Database session
             
         Returns:
-            A new ThemeEntity instance
+            A new ThemeEntityPydantic instance
         """
         # Use the generic BaseManager.create method
         theme = BaseManager.create(
-            entity_class=ThemeEntity,
+            entity_class=ThemeEntityPydantic,
             entity_id=theme_id,
             name=name,
             description=description

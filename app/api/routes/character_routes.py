@@ -1,4 +1,4 @@
-from app.game_state.services.character_service import CharacterService
+from app.game_state.services.character.character_service import CharacterService
 from app.game_state.enums.character import CharacterTypeEnum
 from app.api.schemas.character import CharacterCreate, CharacterTraitsUpdate, AddCharacterTraits
 from fastapi import APIRouter, Depends, HTTPException

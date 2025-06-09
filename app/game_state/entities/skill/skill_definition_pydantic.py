@@ -15,7 +15,7 @@ class SkillDefinitionEntityPydantic(BaseEntityPydantic):
     description: Optional[str] = None
     max_level: int = 100
     themes: List[str] = Field(default_factory=list)  # List of theme names/IDs
-    metadata: Dict[str, Any] = Field(default_factory=dict)  # Using metadata in entity but maps to _metadata in DB model
+    #metadata: Dict[str, Any] = Field(default_factory=dict)  # Using metadata in entity but maps to _metadata in DB model
     
     model_config = ConfigDict(
         from_attributes=True,

@@ -10,7 +10,7 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.async_session import async_session_local
 from app.db.models.settlement import Settlement as SettlementModel
-from app.game_state.entities.settlement import SettlementEntity
+from app.game_state.entities.geography.settlement_pydantic import SettlementEntityPydantic as SettlementEntity
 from app.game_state.repositories.settlement_repository import SettlementRepository
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload

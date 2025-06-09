@@ -38,7 +38,7 @@ class Settlement(Base):
     zone_id: Mapped[uuid.UUID] = mapped_column(
         pg.UUID(as_uuid=True),
         ForeignKey("zones.id",name="fk_settlement_zone_id"),
-        nullable=False
+        nullable=True
     )
 
     # --- Fields OPTIONAL/PROVIDED in Python __init__ (Defaults available) ---

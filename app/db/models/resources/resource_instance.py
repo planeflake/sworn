@@ -22,6 +22,13 @@ class ResourceInstance(Base):
         server_default=func.gen_random_uuid()
     )
 
+    location_id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("location_entities.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+
     resource_id: Mapped[uuid.UUID] = mapped_column(
         PGUUID(as_uuid=True),
         ForeignKey("resources.id", ondelete="CASCADE"),

@@ -9,12 +9,12 @@ from typing import List, Optional
 from .base_repository import BaseRepository
 # Import DB Model and Domain Entity
 from app.db.models.resources.resource_blueprint import ResourceBlueprint as ResourceDbModel
-from app.game_state.entities.resource import ResourceEntity
+from app.game_state.entities.resource.resource_pydantic import ResourceEntityPydantic
 # Import Enums if needed for specific queries (less common here)
 # from app.game_state.enums.shared import StatusEnum
 
 # BaseRepository[DomainEntityType, DbModelType, PrimaryKeyType]
-class ResourceRepository(BaseRepository[ResourceEntity, ResourceDbModel, UUID]):
+class ResourceRepository(BaseRepository[ResourceEntityPydantic, ResourceDbModel, UUID]):
     """
     Repository for handling Resource data persistence.
     """
@@ -29,13 +29,13 @@ class ResourceRepository(BaseRepository[ResourceEntity, ResourceDbModel, UUID]):
         super().__init__(
             db=db,
             model_cls=ResourceDbModel,
-            entity_cls=ResourceEntity
+            entity_cls=ResourceEntityPydantic
             # pk_attr_name="resource_id" # Pass PK name if BaseRepository needs it explicitly
         )
 
     # --- Add Resource-Specific Query Methods Here ---
 
-    async def find_by_name(self, name: str) -> Optional[ResourceEntity]:
+    async def find_by_name(self, name: str) -> Optional[ResourceEntityPydantic]:
         """Finds a resource type by its unique name."""
         # Assumes 'name' is unique in the DB model/table
         stmt = select(self.model_cls).where(self.model_cls.name == name)
@@ -43,7 +43,7 @@ class ResourceRepository(BaseRepository[ResourceEntity, ResourceDbModel, UUID]):
         db_obj = result.scalars().first()
         return await self._convert_to_entity(db_obj)
 
-    async def list_all(self, skip: int = 0, limit: int = 100) -> List[ResourceEntity]:
+    async def list_all(self, skip: int = 0, limit: int = 100) -> List[ResourceEntityPydantic]:
         """Lists all defined resource types."""
         # Uses the find_all method inherited from BaseRepository
         return await super().find_all(skip=skip, limit=limit)

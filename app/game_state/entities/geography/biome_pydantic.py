@@ -1,6 +1,7 @@
+from uuid import UUID
+
 from pydantic import Field, ConfigDict
-from typing import Optional, Dict, Any
-from datetime import datetime
+from typing import Optional, Dict, List
 
 from app.game_state.entities.core.base_pydantic import BaseEntityPydantic
 
@@ -21,33 +22,15 @@ class BiomeEntityPydantic(BaseEntityPydantic):
     base_movement_modifier: float = 1.0  # Movement speed multiplier (1.0 = normal)
     danger_level_base: int = 1  # Base danger level (1-5)
     resource_types: Dict[str, float] = Field(default_factory=dict)  # Resource abundance multipliers
-    
+    theme_ids: List[UUID] = Field(
+        default_factory=list,
+        description="Theme IDs this biome belongs to"
+    )
     # --- Visual Representation ---
     color_hex: Optional[str] = None  # Hexadecimal color code for map display
     icon_path: Optional[str] = None  # Path to biome icon image
     
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert BiomeEntity to a dictionary with safe serialization."""
-        # Get base entity fields
-        data = super().to_dict()
-        
-        # Add biome-specific fields
-        biome_data = {
-            "biome_id": self.biome_id,
-            "display_name": self.display_name,
-            "description": self.description,
-            "base_movement_modifier": self.base_movement_modifier,
-            "danger_level_base": self.danger_level_base,
-            "resource_types": self.resource_types,
-            "color_hex": self.color_hex,
-            "icon_path": self.icon_path,
-            # Add id for database/API compatibility
-            "id": str(self.entity_id)
-        }
-            
-        data.update(biome_data)
-        return data
-    
+
     model_config = ConfigDict(
         from_attributes=True,
         json_schema_extra={
@@ -63,6 +46,7 @@ class BiomeEntityPydantic(BaseEntityPydantic):
                     "herbs": 1.2,
                     "stone": 0.5
                 },
+                "themes": ["b2494b91-f7d1-4c8d-9da2-c628816ed9de","1265b705-778e-4df1-b7ac-2a3f7a01ac22"],
                 "color_hex": "#228B22"
             }
         }

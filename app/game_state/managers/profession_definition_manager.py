@@ -1,6 +1,6 @@
 # --- START OF FILE app/game_state/managers/profession_manager.py ---
 
-from app.game_state.entities.profession_definition_entity import ProfessionDefinitionEntity
+from app.game_state.entities.skill.profession_definition_pydantic import ProfessionDefinitionEntityPydantic
 from app.game_state.managers.base_manager import BaseManager # Import the BaseManager
 from typing import Optional, List, Dict, Any
 from uuid import UUID
@@ -24,7 +24,7 @@ class ProfessionManager:
         configuration_data: Optional[Dict[str, Any]] = None,
         # Change 'id' parameter name to 'entity_id' to match BaseManager/BaseEntity convention
         entity_id: Optional[UUID] = None
-    ) -> ProfessionDefinitionEntity:
+    ) -> ProfessionDefinitionEntityPydantic:
         """
         Creates a new transient (in-memory) ProfessionDefinitionEntity using BaseManager.
         """
@@ -54,7 +54,7 @@ class ProfessionManager:
         # Note: Pass entity_id as 'id' to match BaseManager's parameter name.
         # BaseManager will generate a UUID if entity_id is None.
         profession_entity = BaseManager.create(
-            entity_class=ProfessionDefinitionEntity,
+            entity_class=ProfessionDefinitionEntityPydantic,
             id=entity_id, # Pass entity_id to BaseManager's 'id' parameter
             **entity_kwargs
         )

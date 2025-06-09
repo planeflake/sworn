@@ -4,11 +4,11 @@ import logging
 from uuid import UUID
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Body, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.dependencies import get_async_db
-from app.game_state.services.building_blueprint_service import BuildingBlueprintService # Actual service
+from app.game_state.services.building.building_blueprint_service import BuildingBlueprintService # Actual service
 from app.api.schemas.building_blueprint_schema import (
     BuildingBlueprintRead,
     BuildingBlueprintCreate,

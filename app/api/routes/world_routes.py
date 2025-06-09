@@ -7,11 +7,11 @@ import logging
 from pydantic import BaseModel
 import random
 from app.api.schemas.world import  WorldBase, WorldCreateRequest
-from app.game_state.services.world_service import WorldService
+from app.game_state.services.core.world_service import WorldService
 # Import ThemeService if needed for separate theme endpoints (but not directly for world creation now)
 # from app.game_state.services.theme_service import ThemeService
 from uuid import UUID
-from typing import List, Optional
+from typing import List
 from fastapi import Query
 
 

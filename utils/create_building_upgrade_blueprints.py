@@ -14,7 +14,7 @@ TECHNOLOGIES_ENDPOINT = f"{BASE_API_URL}/technologies/" # Placeholder
 
 # --- Known UUIDs ---
 FANTASY_THEME_ID = "dfba10ac-eaa7-4f83-977d-def25746dfb5"
-FANTASY_THEME_NAME = "Fantasy Basic" # Assuming this is the name associated with the ID
+FANTASY_THEME_NAME = "Fantasy Medieval" # Assuming this is the name associated with the ID
 
 # --- Helper Function to Get or Create an Entity ---
 def get_or_create_entity_id(

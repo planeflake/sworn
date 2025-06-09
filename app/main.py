@@ -62,16 +62,6 @@ except ImportError as e:
 # Store child processes globally for signal handling
 child_processes = []
 
-def start_uvicorn():
-    """Starts the Uvicorn server."""
-    logging.info("Starting Uvicorn server...")
-    uvicorn.run(
-        "app.api.fastapi:fastapi",
-        host="0.0.0.0",
-        port=8000,
-        log_level="info",
-        reload=False
-    )
 
 def start_celery_worker():
     """Starts the Celery worker process."""
@@ -109,7 +99,7 @@ def start_uvicorn():
         port=8000,
         log_level="info",
         log_config=None,     # ← disable Uvicorn’s dictConfig override
-        reload=False,
+        reload=True,
     )
 
 def start_celery_beat():

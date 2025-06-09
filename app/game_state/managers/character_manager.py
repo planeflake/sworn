@@ -1,11 +1,11 @@
 
 from app.game_state.models.character import CharacterApiModel
-from app.game_state.entities.character import CharacterEntity
+from app.game_state.entities.character.character_pydantic import CharacterEntityPydantic
 from typing import Optional
 from uuid import UUID,uuid4
 from app.game_state.enums.shared import RarityEnum, StatusEnum
 from app.game_state.enums.character import CharacterTypeEnum, CharacterTraitEnum
-from app.game_state.entities.resource import ResourceEntity
+from app.game_state.entities.resource.resource_pydantic import ResourceEntityPydantic
 import logging
 
 
@@ -25,7 +25,7 @@ class CharacterManager:
         world_id: UUID = None,
         character_type: CharacterTypeEnum = None,
         traits: list[CharacterTraitEnum] = None,
-    ) -> CharacterEntity:
+    ) -> CharacterEntityPydantic:
         """
         Creates a new transient (in-memory) CharacterEntity.
         Applies initial validation or default logic if any.
@@ -55,7 +55,7 @@ class CharacterManager:
 
         # Create the entity using keyword arguments for clarity
         # after the required positional resource_id
-        character_entity = CharacterEntity(
+        character_entity = CharacterEntityPydantic(
             entity_id=uuid4(),  # Generate a new UUID for the entity
             name=name,
             description=description,

@@ -6,7 +6,6 @@ from uuid import UUID
 import logging
 
 # Import domain entity and repository
-from app.game_state.entities.settlement import SettlementEntity
 from app.game_state.repositories.settlement_repository import SettlementRepository
 from app.game_state.managers.settlement_manager import SettlementManager
 
@@ -20,21 +19,6 @@ class SettlementService:
         self.db = db
         self.repository = SettlementRepository(db=self.db)
         logging.debug("SettlementService initialized with SettlementRepository.")
-
-    @staticmethod
-    async def _convert_entity_to_read_schema(entity: Optional[SettlementEntity]) -> Optional[SettlementRead]:
-        """Convert a domain entity to an API read schema."""
-        if entity is None:
-            return None
-            
-        try:
-            # Use the entity's to_dict method to get a dictionary representation
-            entity_dict = entity.to_dict()
-            # Validate with SettlementRead model
-            return SettlementRead.model_validate(entity_dict)
-        except Exception as e:
-            logging.error(f"Failed to convert Settlement entity to Read schema: {e}", exc_info=True)
-            raise ValueError("Internal error converting settlement data.")
 
     async def create(self, name: str, description: Optional[str], world_id: UUID, population: Optional[int],resources: Optional[dict]) -> SettlementRead:
         """Creates a settlement and returns an API schema."""
@@ -61,7 +45,7 @@ class SettlementService:
                 raise ValueError("Failed to save settlement entity.")
                 
             # 3. Convert the domain entity to API schema
-            settlement_api_schema = await self._convert_entity_to_read_schema(persistent_settlement)
+            settlement_api_schema = SettlementRead.model_validate(persistent_settlement.to_dict())
             logging.info(f"[SettlementService] Settlement '{name}' created successfully with ID: {settlement_api_schema.id}")
             return settlement_api_schema
             
@@ -89,7 +73,7 @@ class SettlementService:
         try:
             settlement_entity = await self.repository.rename(settlement_id=settlement_id, new_name=new_name)
             if settlement_entity:
-                return await self._convert_entity_to_read_schema(settlement_entity)
+                return SettlementRead.model_validate(settlement_entity.to_dict())
             return None
         except Exception as e:
             logging.error(f"[SettlementService] Error renaming settlement with ID {settlement_id}: {e}", exc_info=True)
@@ -101,7 +85,7 @@ class SettlementService:
         try:
             settlement_entity = await self.repository.set_leader(settlement_id=settlement_id, leader_id=leader_id)
             if settlement_entity:
-                return await self._convert_entity_to_read_schema(settlement_entity)
+                return SettlementRead.model_validate(settlement_entity.to_dict())
             return None
         except Exception as e:
             logging.error(f"[SettlementService] Error setting leader for settlement with ID {settlement_id}: {e}", exc_info=True)
@@ -138,7 +122,7 @@ class SettlementService:
             # Construct the building
             settlement_entity = await self.repository.construct_building(settlement_id=settlement_id, building_id=building_id)
             if settlement_entity:
-                return await self._convert_entity_to_read_schema(settlement_entity)
+                return SettlementRead.model_validate(settlement_entity.to_dict())
             return None
         except Exception as e:
             logging.error(f"[SettlementService] Error constructing building in settlement with ID {settlement_id}: {e}", exc_info=True)
@@ -150,7 +134,7 @@ class SettlementService:
         try:
             settlement_entity = await self.repository.demolish_building(settlement_id=settlement_id, building_id=building_id)
             if settlement_entity:
-                return await self._convert_entity_to_read_schema(settlement_entity)
+                return SettlementRead.model_validate(settlement_entity.to_dict())
             return None
         except Exception as e:
             logging.error(f"[SettlementService] Error demolishing building in settlement with ID {settlement_id}: {e}", exc_info=True)
@@ -176,7 +160,7 @@ class SettlementService:
                 quantity=quantity
             )
             if settlement_entity:
-                return await self._convert_entity_to_read_schema(settlement_entity)
+                return SettlementRead.model_validate(settlement_entity.to_dict())
             return None
         except Exception as e:
             logging.error(f"[SettlementService] Error adding resource to settlement with ID {settlement_id}: {e}", exc_info=True)
@@ -202,7 +186,7 @@ class SettlementService:
                 quantity=quantity
             )
             if settlement_entity:
-                return await self._convert_entity_to_read_schema(settlement_entity)
+                return SettlementRead.model_validate(settlement_entity.to_dict())
             return None
         except Exception as e:
             logging.error(f"[SettlementService] Error removing resource from settlement with ID {settlement_id}: {e}", exc_info=True)
@@ -307,7 +291,7 @@ class SettlementService:
         try:
             settlement_entity = await self.repository.apply_resource_costs(settlement_id, costs)
             if settlement_entity:
-                return await self._convert_entity_to_read_schema(settlement_entity)
+                return SettlementRead.model_validate(settlement_entity.to_dict())
             return None
         except Exception as e:
             logging.error(f"[SettlementService] Error applying resource costs to settlement with ID {settlement_id}: {e}", exc_info=True)
@@ -330,6 +314,7 @@ class SettlementService:
         except Exception as e:
             logging.error(f"[SettlementService] Error checking if settlement can afford building: {e}", exc_info=True)
             return False
+
     @staticmethod
     async def expand_settlement(settlement_id: UUID) -> Optional[SettlementRead]:
         """Expands a settlement by its ID."""
@@ -339,20 +324,24 @@ class SettlementService:
         # Placeholder implementation
         return None
 
-    async def get_settlements_by_world(self, world_id: UUID) -> List[SettlementEntity]:
+    async def get_settlements_by_world(self, world_id: UUID) -> List[SettlementRead]:
         """Gets a list of settlements in a world."""
         logging.debug(f"[SettlementService] Getting settlements for world {world_id}")
         try:
-            return await self.repository.find_by_world(world_id)
+
+            settlements = await self.repository.find_by_world(world_id)
+
+            return [SettlementRead.model_validate(settlement.to_dict()) for settlement in settlements]
         except Exception as e:
             logging.error(f"[SettlementService] Error getting settlements for world {world_id}: {e}", exc_info=True)
             return []
             
-    async def get_all_settlements(self) -> List[SettlementEntity]:
+    async def get_all_settlements(self) -> List[SettlementRead]:
         """Gets a list of all settlements."""
         logging.debug("[SettlementService] Getting all settlements")
         try:
-            return await self.repository.find_all()
+            settlements = await self.repository.find_all()
+            return [SettlementRead.model_validate(settlement.to_dict()) for settlement in settlements]
         except Exception as e:
             logging.error(f"[SettlementService] Error getting all settlements: {e}", exc_info=True)
             return []
@@ -367,11 +356,14 @@ class SettlementService:
             )
             
             # Convert domain entities in "items" to read schemas
-            read_schema_items = []
-            for entity in paginated_repo_result["items"]:
-                schema = await self._convert_entity_to_read_schema(entity)
-                if schema:
-                    read_schema_items.append(schema)
+            #read_schema_items = []
+            #for entity in paginated_repo_result["items"]:
+            #    schema = await self._convert_entity_to_read_schema(entity)
+            #    if schema:
+            #        read_schema_items.append(schema)
+
+            read_schema_items = [SettlementRead.model_validate(entity.to_dict()) for entity in paginated_repo_result["items"]]
+
             
             # Construct and return the PaginatedResponse Pydantic model
             return PaginatedResponse[SettlementRead](

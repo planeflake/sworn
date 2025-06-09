@@ -306,7 +306,7 @@ class TestCharacterRepositoryCRUD:
 
         # Act
         with patch.object(character_repository, 'get_by_field', return_value=expected_entity) as mock_get_by_field:
-            result = await character_repository.get_by_name(test_name)
+            result = await character_repository.find_by_name(test_name)
 
         # Assert
         assert result == expected_entity

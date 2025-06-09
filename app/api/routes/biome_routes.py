@@ -5,7 +5,7 @@ import uuid
 import logging
 
 from app.db.dependencies import get_async_db
-from app.game_state.services.biome_service import BiomeService
+from app.game_state.services.geography.biome_service import BiomeService
 from app.api.schemas.biome_schema import BiomeCreate, BiomeRead, BiomeUpdate
 from app.api.schemas.shared import PaginatedResponse
 
@@ -69,27 +69,6 @@ async def get_biome(
         logging.exception(f"Error retrieving biome: {e}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
 
-@router.get("/by-biome-id/{string_id}", response_model=BiomeRead)
-async def get_biome_by_string_id(
-    string_id: str,
-    db: AsyncSession = Depends(get_async_db)
-):
-    """
-    Get a biome by its string identifier (e.g., 'forest', 'desert').
-    """
-    try:
-        biome_service = BiomeService(db=db)
-        biome = await biome_service.get_biome_by_string_id(biome_id=string_id)
-        
-        if not biome:
-            raise HTTPException(status_code=404, detail=f"Biome with string ID '{string_id}' not found")
-        
-        return biome
-    except HTTPException:
-        raise
-    except Exception as e:
-        logging.exception(f"Error retrieving biome: {e}")
-        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
 
 @router.put("/{biome_id}", response_model=BiomeRead)
 async def update_biome(

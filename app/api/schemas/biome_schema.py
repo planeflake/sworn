@@ -16,10 +16,9 @@ class BiomeCreate(BaseModel):
     base_movement_modifier: Optional[float] = Field(1.0, description="Movement speed multiplier (1.0 = normal).")
     danger_level_base: Optional[int] = Field(1, ge=1, le=5, description="Base danger level (1-5).")
     resource_types: Optional[Dict[str, float]] = Field(default={}, description="Dictionary of resource types and their abundance multipliers.")
+    theme_id: Optional[uuid.UUID] = Field(None, description="ID of the theme associated with this biome.")
     color_hex: Optional[str] = Field(None, description="Hexadecimal color code for map display.")
     icon_path: Optional[str] = Field(None, description="Path to biome icon image.")
-
-    # Add any other fields specific to creation if needed
 
 class BiomeUpdate(BaseModel):
     """Schema for updating a biome. All fields are optional."""
@@ -45,6 +44,7 @@ class BiomeRead(BaseModel):
     base_movement_modifier: float
     danger_level_base: int
     resource_types: Optional[Dict[str, float]] = None
+    themes: list[uuid.UUID] = []
     color_hex: Optional[str] = None
     icon_path: Optional[str] = None
     created_at: datetime

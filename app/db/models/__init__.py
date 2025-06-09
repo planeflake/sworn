@@ -11,7 +11,7 @@ from app.db.models.resources.resource_node_blueprint import ResourceNodeBlueprin
 from app.db.models.resources.resource_node_blueprint_link import ResourceNodeBlueprintResource
 from app.db.models.resources.resource_instance import ResourceInstance
 from app.db.models.resources.resource_node import ResourceNode
-from app.db.models.resources.resource_node_link import ResourceNodeLink
+from app.db.models.resources.resource_node_link import ResourceNodeResource
 from .season import Season
 from .building_blueprint import BuildingBlueprint
 from .blueprint_stage import BlueprintStage
@@ -32,7 +32,14 @@ from .skill_definition import SkillDefinition
 from .building_upgrade_blueprint import BuildingUpgradeBlueprint
 from .celestial_events import CelestialEventDB
 from .biome import Biome
+from .action_category import ActionCategory
+from .action_template import ActionTemplate
+from .tool_tier import ToolTier
+from .faction import Faction
+from .location_sub_type import LocationSubType
+from .resources.resource_instance import ResourceInstance
+
 # The following models are DEPRECATED and will be replaced by LocationInstance:
 from .zone import Zone  # DEPRECATED - Use LocationInstance with appropriate location_type
 from .settlement import Settlement  # DEPRECATED - Use LocationInstance with appropriate location_type
-from .faction import Faction
+

@@ -1,14 +1,16 @@
 # --- FILE: app/db/models/location_instance.py ---
 
 import uuid
+from uuid import UUID
 from datetime import datetime
 from typing import Optional, List, Dict, Any, TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, String, Text, DateTime, func, Boolean, Integer
+from sqlalchemy import ForeignKey, String, DateTime, func, Boolean, Integer, CheckConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects import postgresql as pg
-
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from .base import Base
+from .locations.location_faction_presence import LocationFactionPresence
 
 if TYPE_CHECKING:
     from .world import World
@@ -20,6 +22,8 @@ if TYPE_CHECKING:
     from .faction import Faction
     from .travel_link import TravelLink
     from .wildlife import Wildlife
+    from .location_sub_type import LocationSubType
+
 
 class LocationInstance(Base):
     """
@@ -27,9 +31,17 @@ class LocationInstance(Base):
     Each location instance has a type that defines its properties and behavior.
     """
     __tablename__ = "location_entities"
-    __table_args__ = {'extend_existing': True}
+    __table_args__ = (
+        # drop the old “parent_type must equal location_type” rule,
+        # and only forbid self-parenting:
+        CheckConstraint(
+            "parent_id IS NULL OR parent_id <> id",
+            name="ck_location_no_self_parent"
+        ),
+        {'extend_existing': True},
+    )
 
-    id: Mapped[uuid.UUID] = mapped_column(pg.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String, nullable=True)
 
@@ -37,14 +49,14 @@ class LocationInstance(Base):
     # Added in migration add_world_id_to_location_entities
     # Initially nullable until populated
     world_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        pg.UUID(as_uuid=True),
+        PGUUID(as_uuid=True),
         ForeignKey("worlds.id", name="fk_location_world_id", ondelete="CASCADE"),
         nullable=True,
         index=True
     )
 
     location_type_id: Mapped[uuid.UUID] = mapped_column(
-        pg.UUID(as_uuid=True),
+        PGUUID(as_uuid=True),
         ForeignKey("location_types.id", name="fk_location_type_id"),
         nullable=False,
         index=True
@@ -52,7 +64,7 @@ class LocationInstance(Base):
 
     # Parent relationship (self-referential)
     parent_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        pg.UUID(as_uuid=True),
+        PGUUID(as_uuid=True),
         ForeignKey("location_entities.id", name="fk_parent_location", ondelete="SET NULL"),
         nullable=True,
         index=True
@@ -60,31 +72,34 @@ class LocationInstance(Base):
     
     # Parent type relationship
     parent_type_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        pg.UUID(as_uuid=True),
+        PGUUID(as_uuid=True),
         ForeignKey("location_types.id", name="fk_parent_location_type", ondelete="SET NULL"),
         nullable=True
     )
-    
+
+
+
     # Theme and biome references
     theme_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        pg.UUID(as_uuid=True),
+        PGUUID(as_uuid=True),
         ForeignKey("themes.id", name="fk_location_theme_id", ondelete="SET NULL"),
         nullable=True,
         index=True
     )
     
     biome_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        pg.UUID(as_uuid=True),
+        PGUUID(as_uuid=True),
         ForeignKey("biomes.id", name="fk_location_biome_id", ondelete="SET NULL"),
         nullable=True,
         index=True
     )
-    
-    # Sub-type within the location type (e.g., "Village" for settlement type)
-    location_sub_type: Mapped[Optional[str]] = mapped_column(
-        String(50), nullable=True,
-        comment="Sub-type of the location (e.g., Village, Town, Capital)"
+
+    sub_type_id: Mapped[Optional[UUID]] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey('location_sub_types.id'),
+        nullable=True
     )
+    sub_type: Mapped[Optional["LocationSubType"]] = relationship("LocationSubType")
     
     # Base danger level for this location
     base_danger_level: Mapped[int] = mapped_column(
@@ -94,20 +109,28 @@ class LocationInstance(Base):
     
     # Faction that controls this location
     controlled_by_faction_id: Mapped[Optional[uuid.UUID]] = mapped_column(
-        pg.UUID(as_uuid=True),
+        PGUUID(as_uuid=True),
         ForeignKey("factions.id", name="fk_location_controlling_faction", ondelete="SET NULL"),
         nullable=True,
         index=True
     )
-    
+
+    # Factions present in this location and their percentage.
+    present_factions: Mapped[list[LocationFactionPresence]] = relationship(
+        "LocationFactionPresence",
+        back_populates = "location",
+        cascade = "all, delete-orphan",
+        lazy = "selectin",
+    )
+
     # Attributes and metadata
     attributes: Mapped[Dict[str, Any]] = mapped_column(
-        pg.JSONB, nullable=False, server_default=func.cast('{}', pg.JSONB),
+        pg.JSONB, nullable=False, server_default='{}',
         comment="Custom attributes for the location entity."
     )
-    
+
     is_active: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, server_default=func.cast('true', Boolean),
+        Boolean, nullable=False, server_default=func.cast(True, Boolean),
         index=True
     )
     
@@ -133,6 +156,8 @@ class LocationInstance(Base):
         foreign_keys=[location_type_id],
         lazy="selectin"
     )
+
+
 
     parent_type: Mapped[Optional["LocationType"]] = relationship(
         "LocationType",

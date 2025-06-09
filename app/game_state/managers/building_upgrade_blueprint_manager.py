@@ -1,6 +1,6 @@
 # --- START OF FILE app/game_state/managers/building_upgrade_blueprint_manager.py ---
 
-from app.game_state.entities.building_upgrade_blueprint_entity import BuildingUpgradeBlueprintEntity
+from app.game_state.entities.building.building_upgrade_blueprint_pydantic import BuildingUpgradeBlueprintEntityPydantic
 from app.game_state.managers.base_manager import BaseManager
 from typing import Optional, List, Dict, Any
 from uuid import UUID
@@ -22,7 +22,7 @@ class BuildingUpgradeBlueprintManager:
         effects: Optional[Dict[str, Any]] = None,
         is_initial_choice: bool = False,
         entity_id: Optional[UUID] = None
-    ) -> BuildingUpgradeBlueprintEntity:
+    ) -> BuildingUpgradeBlueprintEntityPydantic:
         """Creates a new transient BuildingUpgradeBlueprintEntity."""
 
         entity_kwargs = {
@@ -39,7 +39,7 @@ class BuildingUpgradeBlueprintManager:
         }
 
         upgrade_bp_entity = BaseManager.create(
-            entity_class=BuildingUpgradeBlueprintEntity,
+            entity_class=BuildingUpgradeBlueprintEntityPydantic,
             entity_id=entity_id,
             **entity_kwargs
         )

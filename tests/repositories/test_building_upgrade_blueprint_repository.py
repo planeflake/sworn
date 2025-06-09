@@ -7,7 +7,7 @@ from typing import Dict, Any, Optional
 
 # Import repository and entities for testing
 from app.game_state.repositories.building_upgrade_blueprint_repository import BuildingUpgradeBlueprintRepository
-from app.game_state.entities.building_upgrade_blueprint_entity import BuildingUpgradeBlueprintEntity
+from app.game_state.entities.building.building_upgrade_blueprint_pydantic import BuildingUpgradeBlueprintEntityPydantic as BuildingUpgradeBlueprintEntity
 from app.db.models.building_upgrade_blueprint import BuildingUpgradeBlueprint
 
 # Fixtures

@@ -1,6 +1,6 @@
 # --- START OF FILE app/game_state/managers/skill_definition_manager.py ---
 
-from app.game_state.entities.skill_definition_entity import SkillDefinitionEntity
+from app.game_state.entities.skill.skill_definition_pydantic import SkillDefinitionEntityPydantic
 from app.game_state.managers.base_manager import BaseManager
 from typing import Optional, List, Dict, Any
 from uuid import UUID
@@ -18,7 +18,7 @@ class SkillDefinitionManager:
         themes: Optional[List[str]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         entity_id: Optional[UUID] = None
-    ) -> SkillDefinitionEntity:
+    ) -> SkillDefinitionEntityPydantic:
         """
         Creates a new transient (in-memory) SkillDefinitionEntity using BaseManager.
         """
@@ -32,7 +32,7 @@ class SkillDefinitionManager:
         }
 
         skill_def_entity = BaseManager.create(
-            entity_class=SkillDefinitionEntity,
+            entity_class=SkillDefinitionEntityPydantic,
             entity_id=entity_id, # Pass to BaseManager
             **entity_kwargs
         )

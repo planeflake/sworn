@@ -7,14 +7,14 @@ from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.schemas.location import (
-    LocationTypeCreate, 
-    LocationTypeUpdate, 
+    LocationTypeCreate,
+    LocationTypeUpdate,
     LocationTypeResponse
 )
-from app.game_state.services.location.location_type_service import LocationTypeService
+from app.game_state.services.geography.location_type_service import LocationTypeService
 from app.db.dependencies import get_async_db
 
-router = APIRouter(prefix="/location-types", tags=["location-types"])
+router = APIRouter()
 
 @router.get("/", response_model=List[LocationTypeResponse])
 async def get_location_types(
@@ -24,7 +24,7 @@ async def get_location_types(
     """Get all location types, optionally filtered by theme."""
     service = LocationTypeService(db)
     types = await service.get_all_types(theme)
-    return [type_entity.to_dict() for type_entity in types]
+    return types
 
 @router.get("/{type_id}", response_model=LocationTypeResponse)
 async def get_location_type(
@@ -36,7 +36,7 @@ async def get_location_type(
     type_entity = await service.get_type(type_id)
     if not type_entity:
         raise HTTPException(status_code=404, detail="Location type not found")
-    return type_entity.to_dict()
+    return type_entity
 
 @router.get("/code/{code}", response_model=LocationTypeResponse)
 async def get_location_type_by_code(
@@ -48,7 +48,7 @@ async def get_location_type_by_code(
     type_entity = await service.get_type_by_code(code)
     if not type_entity:
         raise HTTPException(status_code=404, detail="Location type not found")
-    return type_entity.to_dict()
+    return type_entity
 
 @router.post("/", response_model=LocationTypeResponse)
 async def create_location_type(
@@ -65,7 +65,7 @@ async def create_location_type(
 
 @router.patch("/{type_id}", response_model=LocationTypeResponse)
 async def update_location_type(
-    type_id: UUID, 
+    type_id: UUID,
     type_data: LocationTypeUpdate,
     db: AsyncSession = Depends(get_async_db)
 ):
@@ -73,7 +73,7 @@ async def update_location_type(
     service = LocationTypeService(db)
     try:
         type_entity = await service.update_type(
-            type_id, 
+            type_id,
             type_data.model_dump(exclude_unset=True)
         )
         if not type_entity:

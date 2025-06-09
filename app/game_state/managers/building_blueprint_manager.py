@@ -5,10 +5,10 @@ import uuid
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timezone
 
-from app.game_state.entities.building_blueprint import (
-    BuildingBlueprintEntity,
-    BlueprintStageEntity,
-    BlueprintStageFeatureEntity
+from app.game_state.entities.building.building_blueprint_pydantic import (
+    BuildingBlueprintPydantic as BuildingBlueprintEntity,
+    BlueprintStagePydantic as BlueprintStageEntity,
+    BlueprintStageFeaturePydantic as BlueprintStageFeatureEntity
 )
 from app.game_state.managers.base_manager import BaseManager # Assuming you have a BaseManager
 from app.api.schemas.building_blueprint_schema import ( # For type hinting if used

@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Optional, List, Dict, Any, TYPE_CHECKING, ForwardRef
+from typing import Optional, List, Dict, Any, TYPE_CHECKING
 
 from sqlalchemy import (
     String, Text, Boolean,
@@ -12,6 +12,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.models.base import Base
 from app.game_state.enums.shared import StatusEnum
+from app.game_state.enums.resource import ResourceNodeVisibilityEnum
 
 if TYPE_CHECKING:
     from app.db.models.resources.resource_node_link import ResourceNodeResource
@@ -53,6 +54,13 @@ class ResourceNode(Base):
         Enum(StatusEnum, name="resource_node_status_enum", create_type=False),
         nullable=False,
         default=StatusEnum.PENDING,
+        index=True
+    )
+
+    visibility: Mapped[ResourceNodeVisibilityEnum] = mapped_column(
+        Enum(ResourceNodeVisibilityEnum, name="resource_node_visibility_enum", create_type=False),
+        nullable=False,
+        default=ResourceNodeVisibilityEnum.HIDDEN,
         index=True
     )
 

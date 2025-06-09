@@ -1,7 +1,7 @@
 # --- START OF FILE app/api/routes/profession_routes.py ---
 
 from fastapi import APIRouter, Depends, HTTPException, Body, Query, status
-from app.game_state.services.profession_service import ProfessionService
+from app.game_state.services.skill.profession_service import ProfessionService
 from app.api.schemas.profession_schema import (
     ProfessionDefinitionRead,
     ProfessionDefinitionCreate,

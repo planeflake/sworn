@@ -1,6 +1,6 @@
 # --- START OF FILE app/api/routes/building_instance_routes.py ---
 
-from app.game_state.services.building_instance_service import BuildingInstanceService
+from app.game_state.services.building.building_instance_service import BuildingInstanceService
 from app.api.schemas.building_instance import (
     BuildingInstanceRead,
     BuildingInstanceCreate,
@@ -9,7 +9,7 @@ from app.api.schemas.building_instance import (
 from fastapi import APIRouter, Depends, HTTPException, Body, Query, status
 from app.db.dependencies import get_async_db
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List, Optional
+from typing import List
 from uuid import UUID
 import logging
 import uuid

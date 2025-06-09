@@ -1,17 +1,14 @@
 # app/game_state/workers/world_worker.py
 import logging
-from typing import Optional, List, Dict, Any, Tuple
+from typing import List, Dict, Any
 import asyncio
 import uuid
 from redis.exceptions import LockError
-import time
-import math
 
-from celery import group
 from app.core.celery_app import app
 from app.core.redis import create_task_lock
 from app.db.async_session import get_session
-from app.game_state.services.world_service import WorldService
+from app.game_state.services.core.world_service import WorldService
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
